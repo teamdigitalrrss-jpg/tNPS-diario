@@ -1,0 +1,2957 @@
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+
+        
+
+        <meta charset="UTF-8">
+        <title>Analizador NPS</title>
+
+        <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Juank930/ImagenesRRSS/main/Logo2.png">
+
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+        
+        <!-- ✅ NUEVA LIBRERÍA PARA CAPTURA -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+        <style>
+            body {
+                font-family: Arial;
+                margin: 20px;
+            }
+            table {
+                border-collapse: collapse;
+                width: 100%;
+                margin-top: 15px;
+            }
+            th, td {
+                border: 1px solid #ccc;
+                padding: 8px;
+            }
+            
+            th {
+            background: #ee2323;
+                color: white;
+                }
+
+
+            .contenedor-tabla {
+        max-height: 150px; /* puedes ajustar */
+        overflow-y: auto;
+        border: 1px solid #ccc;
+    }
+
+
+    thead th {
+        position: sticky;
+        top: 0;
+        background: #ee2323;
+        color: white;
+        z-index: 1;
+    }
+
+    .btn-licencias {
+        background-color: #ee2323;
+        color: white;
+        border: none;
+        padding: 6px 9px;   /* 👈 más grande */
+        font-size: 25px;      /* 👈 tamaño del ícono */
+        cursor: pointer;
+        margin-left: 5px;
+        border-radius: 6px;
+    }
+
+
+    .btn-licencias:hover {
+        background-color: #c91d1d;
+    }
+
+    /* Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    /* Contenido */
+    .modal-contenido {
+        background: white;
+        width: 80%;
+        max-height: 80%;
+        margin: 5% auto;
+        padding: 20px;
+        overflow: auto;
+        border-radius: 10px;
+    }
+
+    /* Botón cerrar */
+    .cerrar {
+        float: right;
+        font-size: 20px;
+        cursor: pointer;
+        color: red;
+    }
+
+    .tabla3-container {
+        display: inline-block;
+        width: 35%;
+        vertical-align: top;
+    }
+
+    #tabla3 {
+        width: auto;
+        table-layout: auto;
+    }
+
+
+    .tabla3-wrapper {
+        width: 350px; /* 👈 ancho fijo para dejar espacio a la pizarra */
+    }
+
+
+    .tabla3-wrapper .contenedor-tabla {
+        width: auto;
+        max-height: 300px;
+    }
+
+    #tabla3 {
+        width: auto !important;
+        table-layout: auto;
+    }
+
+    #tabla3 th, #tabla3 td {
+        white-space: nowrap;
+    }
+
+    #tituloTabla3 {
+        display: inline-block;
+        width: fit-content;
+    }
+
+    .tabla1-container {
+        max-height: 140px; /* 👈 ajusta altura a ~3 filas */
+        overflow-y: auto;
+    }
+
+    /* ===== PIZARRA ===== */
+
+
+#pizarraContainer {
+    position: relative;
+    width: 1550px;
+    height: 872px;
+
+    display: flex;
+    flex-direction: column;
+
+    background-image: url("https://raw.githubusercontent.com/Juank930/ImagenesRRSS/main/irculo%20(1).png");   /* 👈 TU IMAGEN */
+    background-size: cover;              /* 👈 ocupa todo */
+    background-position: center;         /* 👈 centrada */
+    background-repeat: no-repeat;
+
+    border-radius: 8px;
+    overflow: visible;
+}
+
+
+    /* header */
+
+    #pizarraHeader {
+        display: flex;
+        align-items: center;
+        justify-content: center; /* 👈 centra */
+        position: relative; /* 👈 permite mover el ojo */
+        background: transparent;
+        color: rgb(255, 255, 255);
+        padding: 25px 10px;
+
+
+        /* botón ojo */
+            #btnCopiar {
+                cursor: pointer;
+            font-size: 30px;
+            color: #0396a6;  /* 👈 cambia el color del ícono */
+    }}
+
+    #btnCopiar:hover {
+        opacity: 0.6;
+    }
+
+    /* contenido editable */
+    #pizarraContenido {
+        flex: 1;
+        display: flex;
+    }
+
+    #btnCopiar {
+        position: absolute;
+        right: 10px;
+        top: 5px; /* 👈 mueve hacia arriba */
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+
+#tituloPizarra {
+    font-size: 35px;
+    font-weight: bold;
+    letter-spacing: 2px;
+
+    color: #0396a6;
+
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+}
+
+
+    .card-nombre {
+        color: #0396a6 !important; 
+        font-size: 22px; /* 👈 Tamaño titulo de supervisores */
+        font-weight: 600;
+        text-align: center;
+        margin-top: -5px;  /* 👈 👈 ESTO lo baja */
+    }
+
+    .card-supervisor {
+        background: #f3f3f3;  /* ✅ Color card supervisor */
+        border-radius: 50px;
+
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4); /* ✅ sombra */
+
+        width: 150px;
+        height: 70px;
+
+        min-width: 260px;
+        min-height: 100px;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+
+    .card-tnps {
+        font-size: 40px; /* ✅ Tamaño dato */
+        font-weight: bold;
+        margin-top: 0px; /* 👈 sube el número */
+        text-align: center;
+    }
+
+    #pizarraContainer * {
+        font-family: Arial;
+    }
+
+
+
+    #cardsSupervisores {
+        display: flex;
+        flex-direction: column;
+
+        height: 100%;
+
+        align-items: flex-start;
+        padding-left: 70px;
+        gap: 40px;             /* 👈 separación entre cards */
+        margin-top: 30px;   /* 👈 mueve todo hacia abajo */
+    }
+
+
+    #cardsAcumulados {
+        display: flex;
+        flex-direction: column;
+
+        gap: 68px;
+        margin-top: 80px; /* 👈 baja TODO el bloque */
+
+        position: relative;   /* 👈 NECESARIO */
+        left: -45px;          /* 👈 las mete sobre la card grande */
+    }
+
+
+    .card-acumulado {
+        background: #f3f3f3; /* ✅ Color minicard */
+        border-radius: 50px;
+
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+
+        width: 150px;
+        height: 70px;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .card-acumulado-nombre {
+        color: #0396a6;
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: -5px;
+    }
+
+    .card-acumulado-tnps {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+
+
+
+#cardsTNPS {
+    position: absolute;
+
+    left: 480px;  /* 👈 MUÉVELO IZQUIERDA */
+    top: 120px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+    /* Card */
+
+    .card-tnps-site {
+        background: #f3f3f3;  /* gris más elegante */
+        border-radius: 18px;
+
+        box-shadow: 0 6px 9px rgba(0,0,0,0.3);
+
+        width: 220px; /* más ancha */
+        height: 130px;  /* más alta */
+
+        padding: 10px;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start; /* 👈 clave */
+        gap: 5px;                   /* 👈 controla separación */
+
+    }
+
+
+    /* Título */
+    .card-tnps-titulo {
+        color: #0396a6;
+        font-size: 18px;
+        font-weight: 600;
+
+        margin: 0;   /* ❌ quitar margin grande */
+        margin-top: 12px;  /* 👈 baja el título */
+    }
+
+
+    .card-tnps-site canvas {
+        display: block;
+        margin: auto;   /* ✅ centra horizontal */
+        margin-top: -20px;  /* 👈 sube el gráfico */
+    }
+
+    #pizarraContainer {
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5); /* sombra externa */
+        border: 1px solid rgba(255,255,255,0.1); /* borde sutil */
+    }
+
+
+    #btnActualizarTabla3 {
+        background-color: #ffffff; /* 👈 color del botón */
+        color: white;
+    }
+
+
+    #btnActualizarTabla3:hover {
+        background-color: #c56663;
+    }
+
+    #btnLinkTabla3 {
+        background-color: #ffffff; /* 👈 nuevo color */
+    }
+
+    #btnLinkTabla3:hover {
+        background-color: #c56663;
+    }
+
+    .card-supervisor,
+    .card-acumulado,
+    .card-tnps-site {
+        border: 2px solid rgba(0,0,0,0.15); /* 👈 contorno suave */
+    }
+
+    #graficoLineaContainer {
+        position: absolute;
+
+        right: 40px;
+        top: 120px;
+
+        width: 700px;
+        height: 400px;
+
+        background: #f1f1f1;
+
+        border-radius: 10px;
+        padding: 15px;
+        border: 2px solid rgba(0,0,0,0.15);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+    }
+
+    #cardsResumen {
+    position: absolute;
+
+    left: 785px;   /* 👈 ajusta según tu gráfico */
+    top: 600px;    /* 👈 debajo del gráfico */
+
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.card-resumen {
+    background: #f3f3f3;
+
+    border-radius: 18px;
+    box-shadow: 0 6px 9px rgba(0,0,0,0.3);
+
+    width: 220px;     /* ✅ MISMO TAMAÑO */
+    height: 145px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    border: 2px solid rgba(0,0,0,0.15);
+}
+
+.card-resumen-titulo {
+    color: #0396a6;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.card-resumen-valor {
+    font-size: 55px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.btn-azul {
+    background-color: #0396a6;  /* 🔥 azul */
+    color: white;
+    border: none;
+    padding: 6px 9px;
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: 5px;
+    border-radius: 6px;
+}
+
+.btn-azul:hover {
+    background-color: #027c8a;
+}
+
+#tituloPrincipal {
+    text-align: center;        /* ✅ centrado */
+
+    color: #ee2323;            /* ✅ rojo */
+
+    font-size: 40px;           /* 🔥 más grande */
+    font-weight: bold;
+
+    letter-spacing: 2px;       /* 🔥 más elegante */
+
+    margin-bottom: 15px;
+
+    text-shadow: 
+        2px 2px 6px rgba(0,0,0,0.3),    /* sombra */
+        0 0 8px rgba(238,35,35,0.4);    /* glow rojo */
+}
+
+#notaMovible {
+    position: fixed;
+
+    top: 40px;    /* 👈 sube el cuadro (ajústalo) */
+    left: 10%;
+
+    transform: translateX(-50%);  /* ✅ solo centra horizontal */
+
+    width: 350px;
+
+    background: #f3e888;
+    color: rgb(3, 0, 0);
+
+    border: 2px solid #888;
+    border-radius: 15px;
+
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+
+    z-index: 9999;
+}
+
+/* encabezado */
+#notaHeader {
+    padding: 10px;
+    font-weight: bold;
+
+    background: rgba(0,0,0,0.1);
+    border-bottom: 1px solid #888;
+
+    cursor: move;
+
+    display: flex;
+    justify-content: space-between;
+}
+
+/* contenido */
+#notaContenido {
+    padding: 12px;
+    font-size: 14px;
+}
+
+/* botón cerrar */
+#cerrarNota {
+    cursor: pointer;
+}
+
+
+#graficoEncuestasContainer {
+    width: 900px;
+    height: 350px;
+
+    margin: 30px auto;   /* ✅ centrado */
+
+    background: #f1f1f1;
+
+    border-radius: 10px;
+    padding: 15px;
+
+    border: 2px solid rgba(0,0,0,0.15);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+}
+
+
+#cardsMetaTNPS {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+
+
+#cardsMetaTNPS .card-supervisor {
+    min-width: 100%;
+    height: 70px;
+}
+
+
+
+#cardsMetaTNPS {
+    border-top: 2px solid rgba(0,0,0,0.15);
+}
+
+#miniPizarraMeta {
+
+    margin-top: 15px;
+
+    background: #f3f3f3;
+    border-radius: 15px;
+
+    padding: 15px;
+
+    border: 2px solid rgba(0,0,0,0.15);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+}
+
+#tituloMiniPizarra {
+
+    text-align: center;
+
+    color: #0396a6;
+    font-size: 18px;
+    font-weight: bold;
+
+    margin-bottom: 10px;
+}
+
+#headerMiniPizarra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+#btnCopiarMini {
+    cursor: pointer;
+    font-size: 18px;
+    color: #0396a6;
+}
+
+#btnCopiarMini:hover {
+    opacity: 0.6;
+}
+
+#miniPizarraMeta:hover {
+    transform: scale(1.02);
+    transition: 0.2s;
+}
+#fechaInline {
+    font-size: 18px;
+    margin-left: 15px;
+    color: #0396a6;
+    font-weight: normal;
+}
+
+#pizarraContainer {
+    margin-left: 40px; /* 🔥 ajusta este valor */
+}
+
+.modal-pequeno {
+    width: 300px !important;   /* 👈 tamaño pequeño */
+    max-width: 90%;
+    
+    margin: 15% auto;          /* 👈 centrado vertical */
+    
+    padding: 15px;
+
+    text-align: center;        /* 👈 más limpio */
+}
+
+.modal-pequeno {
+    width: 280px !important;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.modal-pequeno h3 {
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+    </style>
+
+    <body>
+    
+    <div id="modalLicencias" class="modal">
+        
+        <div class="modal-contenido">
+            <span id="cerrarModal" class="cerrar">✖ Cerrar</span>
+            
+            <h3>Licencias</h3>
+
+    <div class="contenedor-tabla tabla1-container">
+        <table id="tabla">
+                <table id="tablaLicencias">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+        </table>
+    </div>
+
+        </div>
+    </div>
+
+
+    <div id="modalTNPS" class="modal">
+        <div class="modal-contenido">
+            
+         <span id="cerrarModalTNPS" class="cerrar">✖ Cerrar</span>
+         <span id="copiarTNPS" class="btn-licencias" style="margin-right:10px;">📋 Copiar</span>
+
+            <h3>tNPS Asesores</h3>
+
+            <div class="contenedor-tabla">
+                <table id="tablaTNPS">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalMensaje" class="modal">
+    <div class="modal-contenido">
+
+        <span id="cerrarModalMensaje" class="cerrar">✖ Cerrar</span>
+
+        <h3>Mensaje WhatsApp</h3>
+
+        <div id="loadingMensaje" style="display:none; font-weight:bold; text-align:center;">
+            ⏳ Generando mensaje...
+        </div>
+
+        <textarea id="textoMensaje" style="width:100%; height:230px;"></textarea>
+
+        <br><br>
+
+        <button id="copiarMensaje" class="btn-licencias">📋 Copiar</button>
+
+    </div>
+</div>
+
+<div id="notaMovible">
+
+    <div id="notaHeader">
+        🔎 Nota importante 
+        <span id="cerrarNota">✖</span>
+    </div>
+
+    <div id="notaContenido">
+        🔎 Antes de cargar archivo, asegurate de 👇<br><br>
+        - Descargar reporte de atenciones<br>
+        - Abrir el archivo<br>
+        - Insertar tabla<br>
+        - Guardar como extensión .xlsx<br><br>
+        Ahora ya podrás cargar el archivo en este sitio 😎
+    </div>
+
+</div>
+
+
+<h2 id="tituloPrincipal">📊 tNPS del día</h2>
+
+<input type="file" id="fileInput" accept=".xlsx" style="display:none;" />
+<button id="btnArchivo" class="btn-azul">📂 Seleccionar archivo</button>
+<span id="nombreArchivo"></span>
+<button id="btnLicencias" class="btn-licencias">Licencias</button>
+<button id="btnTNPS" class="btn-licencias">tNPS Asesores</button>
+
+<button id="btnGenerarMensaje" class="btn-azul">
+    ✉️ Generar mensaje
+</button>
+
+
+<br><br>
+
+<label><b>Filtrar Supervisor:</b></label><br>
+
+<div id="filtroSupervisor" style="border:1px solid #ccc; padding:10px; width:300px; height:120px; overflow-y:auto;"></div>
+
+<h3 id="tituloResultados">Resultados</h3>
+
+<div class="contenedor-tabla">
+<table id="tabla">
+<thead>
+<tr>
+    <th>Hora</th>
+    <th>Operador de cierre</th>
+    <th>Skill</th>
+    <th>Canal</th>
+    <th>Nota</th>
+    <th>Tipo de encuesta</th>
+    <th>Encuesta</th>
+    <th>Supervisor</th>
+    <th>Site</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+
+
+<div style="display:flex; gap:20px; width:100%; align-items:flex-start; margin-top:20px;">
+
+<!-- ✅ TABLA 3 -->
+<div class="tabla3-wrapper">
+<h3 id="tituloTabla3">Promedios acumulados</h3>
+
+<button id="btnActualizarTabla3" class="btn-licencias" style="margin-bottom:5px;">🔄</button>
+<button id="btnGuardarTabla3" class="btn-licencias" style="margin-bottom:5px;">💾</button>
+
+<div class="contenedor-tabla">
+<table id="tabla3">
+<thead></thead>
+<tbody></tbody>
+</table>
+</div>
+
+<div id="miniPizarraMeta">
+<div id="headerMiniPizarra">
+<span id="tituloMiniPizarra">Meta tNPS 75</span>
+<span id="btnCopiarMini">📋</span>
+</div>
+<div id="cardsMetaTNPS"></div>
+</div>
+</div>
+
+<!-- ✅ WRAPPER AGREGADO -->
+<div id="pizarraWrapper">
+
+<!-- ✅ PIZARRA -->
+<div id="pizarraContainer">
+
+<div id="pizarraHeader">
+<span id="tituloPizarra">
+    CANALES DIGITALES 2026 
+    <span id="fechaInline"></span>
+</span>
+</div>
+
+<div id="pizarraContenido">
+<div id="cardsSupervisores"></div>
+<div id="cardsAcumulados"></div>
+<div id="cardsTNPS"></div>
+</div>
+
+<div id="graficoLineaContainer">
+<canvas id="graficoLinea"></canvas>
+</div>
+
+<div id="cardsResumen"></div>
+
+</div>
+</div>
+
+</div>
+
+<div id="modalPassword" class="modal">
+<div class="modal-contenido modal-pequeno">
+
+<h3>🔐 Acceso restringido</h3>
+
+<input type="password" id="inputPassword"
+placeholder="Ingresa contraseña"
+style="width:100%; padding:8px; font-size:14px;">
+
+<br><br>
+
+<button onclick="validarPassword()" class="btn-azul">Aceptar</button>
+<button onclick="cerrarPassword()" class="btn-licencias">Cancelar</button>
+
+</div>
+</div>
+
+
+    <script>
+    let supervisoresSeleccionados = [];
+    let datosGlobales = [];
+    let metricasGlobales = {};
+    let mapaLicencias = {};
+    let licenciasCargadas = false;
+    const COLOR_VERDE = "#008000";
+    const COLOR_ROJO = "#ee2323";
+
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet);
+
+            console.log(json); // ✅ verifica aquí
+            
+    if (!licenciasCargadas) {
+        cargarLicencias(() => procesarDatos(json));
+    } else {
+        procesarDatos(json);
+    }
+
+            };
+
+            reader.readAsArrayBuffer(file);
+                });
+
+function procesarDatos(data) {
+
+    datosGlobales = [];
+
+    data.forEach(row => {
+
+    // ✅ EXTRAER HORA (CORRECTO)
+    let hora = "";
+    let valor = row["Hora4"];
+
+    if (valor !== undefined && valor !== null) {
+
+        if (typeof valor === "number") {
+            let totalHoras = valor * 24;
+            let h = Math.floor(totalHoras);
+            hora = h.toString().padStart(2, "0");
+        }
+
+        else if (typeof valor === "string") {
+            let partes = valor.split(":");
+            let h = parseInt(partes[0]);
+
+            if (!isNaN(h)) {
+                hora = h.toString().padStart(2, "0");
+            }
+        }
+    }
+
+    // ✅ TU LÓGICA ORIGINAL
+    const categoria = row["Categoría"];
+    const operador = row["Operador Cierre"];
+    const servicio = row["Servicio"];
+    const ans1 = row["ans1"];
+
+    if (
+        categoria !== "Dinamica" &&
+        categoria !== "Marcado Pendiente" &&
+        categoria !== "Marcado Pendiente Auto" &&
+        categoria !== "Spam" &&
+        operador !== "robot@clarosv" &&
+        servicio !== "" &&
+        servicio != null &&
+        ans1 != null
+    ) {
+
+        let nota = parseInt(ans1);
+
+        if (!isNaN(nota) && nota >= 0 && nota <= 10) {
+
+            let tipo = "";
+            if (nota >= 9) tipo = "Promotor";
+            else if (nota >= 7) tipo = "Pasivo";
+            else tipo = "Detractor";
+
+            let encuesta = row["ans7"] ? "Completa" : "Incompleta";
+
+            let canal = "";
+            if (servicio === "wa0") canal = "WhatsApp";
+            else if (servicio === "facebook2") canal = "Messenger";
+            else if (servicio === "instagram4") canal = "Instagram";
+            else canal = "Invalid";
+
+            const operadorKey = (operador || "")
+                .toLowerCase()
+                .trim()
+                .replace(/\s+/g, "");
+
+            let supervisor = "";
+            let site = "";
+
+            if (mapaLicencias[operadorKey]) {
+                supervisor = mapaLicencias[operadorKey].supervisor;
+                site = mapaLicencias[operadorKey].site;
+            }
+
+            datosGlobales.push({
+                hora: hora, // ✅ NUEVO
+                operador: operador || "",
+                skill: row["Skill"] || "",
+                canal: canal,
+                nota: nota,
+                tipo: tipo,
+                encuesta: encuesta,
+                supervisor: supervisor,
+                site: site,
+                fecha: row["Fecha"] || row["Fecha/Hora"] || row["timestamp"] || null
+            });
+        }
+    }
+});
+
+
+
+    // ✅ TODO ESTO VA FUERA
+    console.log("Total datos:", datosGlobales.length);
+
+    llenarFiltroSupervisor();
+    renderTabla();
+    actualizarTitulo();
+    cargarTabla3();
+    generarCardsSupervisores();
+    generarCardsAcumulados();
+    generarCardsTNPS();
+    generarCardsMetaTNPS();
+    calcularMetricasGlobales();
+    generarCardFecha();
+
+    
+    requestAnimationFrame(() => {
+    generarGraficoLinea();
+    generarCardsResumen();
+    generarGraficoEncuestasHora();
+});
+
+}
+
+
+    function renderTabla() {
+        const tbody = document.querySelector("#tabla tbody");
+        tbody.innerHTML = "";
+
+        
+    let mostrar = datosGlobales
+        .filter(row => row.supervisor && row.supervisor.trim() !== "")
+        .filter(row => {
+            // 🔹 Si no hay selección → mostrar todo
+            if (supervisoresSeleccionados.length === 0) return true;
+
+            // 🔹 Si hay selección → solo los elegidos
+            return supervisoresSeleccionados.includes(row.supervisor);
+        })
+        .slice(0, 100);
+
+
+
+        mostrar.forEach(row => {
+            let tr = document.createElement("tr");
+
+
+    tr.innerHTML = `
+        <td>${row.hora}</td> <!-- ✅ NUEVO -->
+        <td>${row.operador}</td>
+        <td>${row.skill}</td>
+        <td>${row.canal}</td>
+        <td>${row.nota}</td>
+        <td>${row.tipo}</td>
+        <td>${row.encuesta}</td>
+        <td>${row.supervisor || ""}</td>
+        <td>${row.site || ""}</td>
+    `;
+
+
+            tbody.appendChild(tr);
+        });
+    }
+    
+    const urlLicencias = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRcU_5O6yTR9k9TqkK7bvKOm9ujS2-64f-WvCSQIziijtqNphg8yVJkUsDdZR3rOCxw6yYU6HjdrRg/pub?output=csv";
+    const urlTabla3 = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOTpAwD_MQDzqLse2GIcXhNuUtjYnuLVaCH5Wr7nPy4miJ2tXUTm4U6Q2_JFr4czCjDXOTTQNUvRjO/pub?output=csv";
+    const BIN_ID = "6a0a039cadc21f119ab47e21";
+    const API_KEY = "$2a$10$q61RRXXWGn0q.8C4EwKUj.tzkVQzVVl.hTXm3qo7n0H8CrOVpnZHa";
+    const URL_BIN = `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`;
+    const URL_BIN_PUT = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+    const modal = document.getElementById("modalLicencias");
+    const modalTNPS = document.getElementById("modalTNPS");
+    const btnTNPS = document.getElementById("btnTNPS");
+    const cerrarTNPS = document.getElementById("cerrarModalTNPS");
+    const btn = document.getElementById("btnLicencias");
+    const cerrar = document.getElementById("cerrarModal");
+
+    btn.onclick = () => {
+        modal.style.display = "block";
+        cargarLicencias();
+    };
+
+    btnTNPS.onclick = () => {
+        modalTNPS.style.display = "block";
+        generarTablaTNPS(); // ✅ genera los datos
+    };
+
+    cerrarTNPS.onclick = () => {
+        modalTNPS.style.display = "none";
+    };
+
+
+    cerrar.onclick = () => {
+        modal.style.display = "none";
+    };
+
+
+    window.onclick = (e) => {
+        if (e.target === modal) {
+            modal.style.display = "none";
+        }
+        if (e.target === modalTNPS) {
+            modalTNPS.style.display = "none";
+        }
+    };
+
+
+    function renderTablaLicencias(filas) {
+        
+        const thead = document.querySelector("#tablaLicencias thead");
+        const tbody = document.querySelector("#tablaLicencias tbody");
+
+        thead.innerHTML = "";
+        tbody.innerHTML = "";
+
+        filas.forEach((fila, index) => {
+            let tr = document.createElement("tr");
+
+            fila.forEach(col => {
+                let celda = document.createElement(index === 0 ? "th" : "td");
+                celda.textContent = col;
+                tr.appendChild(celda);
+            });
+
+            if (index === 0) thead.appendChild(tr);
+            else tbody.appendChild(tr);
+        });
+    }
+
+function cargarTabla3() {
+
+    fetch(URL_BIN, {
+        headers: {
+            "X-Master-Key": API_KEY
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        console.log("DATA REAL:", data);
+
+        let json = data.record?.record || data.record || [];
+
+        if (!Array.isArray(json)) {
+            json = [];
+        }
+
+        renderTabla3(json);
+
+        generarCardsAcumulados();
+        generarCardsTNPS();
+
+    })
+    .catch(err => {
+        console.error("Error JSONBin:", err);
+        renderTabla3([]);
+    });
+}
+
+
+
+    function llenarFiltroSupervisor() {
+        const contenedor = document.getElementById("filtroSupervisor");
+        contenedor.innerHTML = "";
+
+        const supervisores = [...new Set(
+            datosGlobales
+                .filter(r => r.supervisor)
+                .map(r => r.supervisor)
+        )];
+
+        supervisores.sort();
+
+        supervisores.forEach(sup => {
+            const label = document.createElement("label");
+            label.style.display = "block";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.value = sup;
+
+            checkbox.addEventListener("change", () => {
+                supervisoresSeleccionados = Array.from(
+                    contenedor.querySelectorAll("input:checked")
+                ).map(cb => cb.value);
+
+                renderTabla();
+                actualizarTitulo(); // ✅ AGREGA ESTA LÍNEA
+
+                
+                if (modalTNPS.style.display === "block") {
+                generarTablaTNPS();
+                }
+
+            });
+
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(" " + sup));
+
+            contenedor.appendChild(label);
+        });
+    }
+
+
+    function actualizarTitulo() {
+        let filtrados = datosGlobales
+            .filter(row => row.supervisor && row.supervisor.trim() !== "");
+
+        if (supervisoresSeleccionados.length > 0) {
+            filtrados = filtrados.filter(row =>
+                supervisoresSeleccionados.includes(row.supervisor)
+            );
+        }
+
+        const total = filtrados.length;
+        const mostrando = Math.min(100, total);
+
+        document.getElementById("tituloResultados").textContent =
+            `Resultados (mostrando ${mostrando} de ${total} filas)`;
+    }
+
+
+
+    document.getElementById("btnActualizarTabla3").addEventListener("click", function() {
+        cargarTabla3(); // 🔄 vuelve a traer datos de Google Sheets
+    });
+
+
+    function generarTablaTNPS() {
+
+        let resultado = {};
+
+        
+    // ✅ FILTRAR IGUAL QUE TABLA PRINCIPAL
+    let datosFiltrados = datosGlobales
+        .filter(row => row.supervisor && row.supervisor.trim() !== "")
+        .filter(row => {
+            if (supervisoresSeleccionados.length === 0) return true;
+            return supervisoresSeleccionados.includes(row.supervisor);
+        });
+
+
+        // ✅ agrupar por operador
+        datosFiltrados.forEach(row => {
+
+            if (!row.operador) return;
+
+            if (!resultado[row.operador]) {
+                resultado[row.operador] = {
+                    promotores: 0,
+                    pasivos: 0,
+                    detractores: 0,
+                    total: 0
+                };
+            }
+
+            if (row.tipo === "Promotor") resultado[row.operador].promotores++;
+            else if (row.tipo === "Pasivo") resultado[row.operador].pasivos++;
+            else if (row.tipo === "Detractor") resultado[row.operador].detractores++;
+
+            resultado[row.operador].total++;
+        });
+
+        // ✅ renderizar tabla
+        const thead = document.querySelector("#tablaTNPS thead");
+        const tbody = document.querySelector("#tablaTNPS tbody");
+
+        thead.innerHTML = "";
+        tbody.innerHTML = "";
+
+        // encabezados
+        const encabezados = ["Usuario OM", "Promotores", "Pasivos", "Detractores", "tNPS"];
+
+        let trHead = document.createElement("tr");
+        encabezados.forEach(h => {
+            let th = document.createElement("th");
+            th.textContent = h;
+            trHead.appendChild(th);
+        });
+        thead.appendChild(trHead);
+
+        // filas
+        
+            Object.entries(resultado)
+            .sort((a, b) => b[1].promotores - a[1].promotores)
+            .forEach(([operador, data]) => {
+
+
+            let tNPS = 0;
+
+            if (data.total > 0) {
+                tNPS = ((data.promotores - data.detractores) / data.total) * 100;
+            }
+
+            let tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${operador}</td>
+                <td>${data.promotores}</td>
+                <td>${data.pasivos}</td>
+                <td>${data.detractores}</td>
+                <td>${tNPS.toFixed(2)} %</td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+    }
+    function calcularTNPSPorSupervisor(nombreSupervisor) {
+
+        let datos = datosGlobales.filter(r => r.supervisor === nombreSupervisor);
+
+        let promotores = 0;
+        let detractores = 0;
+        let total = 0;
+
+        datos.forEach(r => {
+            if (r.tipo === "Promotor") promotores++;
+            else if (r.tipo === "Detractor") detractores++;
+            total++;
+        });
+
+        if (total === 0) return 0;
+
+        return ((promotores - detractores) / total) * 100;
+    }
+
+    function generarCardsSupervisores() {
+
+        const contenedor = document.getElementById("cardsSupervisores");
+        contenedor.innerHTML = "";
+
+        const supervisores = [
+            "Erika Martinez",
+            "Jaime Flores",
+            "Erick Morales",
+            "Rodrigo Gomez",
+            "Gerardo Leiva"
+        ];
+
+        supervisores.forEach(nombre => {
+
+            let tnps = calcularTNPSPorSupervisor(nombre);
+
+            let color = tnps >= 75 ? "#008000" : "#ee2323";
+
+            let card = document.createElement("div");
+            card.className = "card-supervisor";
+
+            card.innerHTML = `
+                <div class="card-nombre">${nombre}</div>
+                <div class="card-tnps" style="color:${color}">
+                    ${tnps.toFixed(2)}
+                </div>
+            `;
+
+            contenedor.appendChild(card);
+        });
+    }
+
+
+    function generarCardsAcumulados() {
+
+        const contenedor = document.getElementById("cardsAcumulados");
+        contenedor.innerHTML = "";
+
+        const filas = document.querySelectorAll("#tabla3 tbody tr");
+
+        const orden = [
+            "Erika",
+            "Jaime",
+            "Erick",
+            "Rodrigo",
+            "Gerardo"
+        ];
+
+        orden.forEach(nombre => {
+
+            let valor = 0;
+
+            filas.forEach(fila => {
+
+                let texto = fila.cells[0]?.textContent.toLowerCase() || "";
+
+                if (texto.includes(nombre.toLowerCase())) {
+
+                    let dato = fila.cells[1]?.textContent || "0"; // ✅ COLUMNA CORRECTA
+                    valor = parseFloat(dato) || 0;
+                }
+
+            });
+
+            let color = valor >= 75 ? "#008000" : "#ee2323";
+
+            let card = document.createElement("div");
+            card.className = "card-acumulado";
+
+            card.innerHTML = `
+                <div class="card-acumulado-nombre">Acumulado</div>
+                <div class="card-acumulado-tnps" style="color:${color}">
+                    ${valor.toFixed(2)}
+                </div>
+            `;
+
+            contenedor.appendChild(card);
+        });
+
+    }
+
+
+
+    function calcularTNPSPorSite(siteNombre) {
+
+        let datos = datosGlobales.filter(r =>
+            (r.site || "").toLowerCase().trim() === siteNombre.toLowerCase()
+        );
+
+        let promotores = 0;
+        let detractores = 0;
+        let total = 0;
+
+        datos.forEach(r => {
+            if (r.tipo === "Promotor") promotores++;
+            else if (r.tipo === "Detractor") detractores++;
+            total++;
+        });
+
+        if (total === 0) return 0;
+
+        return ((promotores - detractores) / total) * 100;
+    }
+
+    function generarCardsTNPS() {
+
+        const contenedor = document.getElementById("cardsTNPS");
+        contenedor.innerHTML = "";
+
+        
+    const sitios = ["Santa Elena", "Santa Ana"];
+
+    const tnpsDia = calcularTNPSGlobal();
+    const tnpsMes = obtenerTNPSMes();
+
+    const cardsAdicionales = [
+        { nombre: "tNPS Día", valor: tnpsDia },
+        { nombre: "tNPS Mes", valor: tnpsMes }
+    ];
+
+
+        sitios.forEach(site => {
+
+            let tnps = calcularTNPSPorSite(site);
+
+            let card = document.createElement("div");
+            card.className = "card-tnps-site";
+
+            const idCanvas = "chart-" + site.replace(/\s/g, "");
+
+            card.innerHTML = `
+                <div class="card-tnps-titulo">${site}</div>
+                <canvas id="${idCanvas}" width="160" height="80"></canvas>
+            `;
+
+            contenedor.appendChild(card);
+
+            // 🔥 dibujar gráfica después de renderizar
+            
+
+setTimeout(() => {
+    dibujarGauge(idCanvas, tnps);
+}, 50);
+
+        });
+        cardsAdicionales.forEach(item => {
+
+        let card = document.createElement("div");
+        card.className = "card-tnps-site";
+
+        const idCanvas = "chart-" + item.nombre.replace(/\s/g, "");
+
+        card.innerHTML = `
+            <div class="card-tnps-titulo">${item.nombre}</div>
+            <canvas id="${idCanvas}" width="160" height="80"></canvas>
+        `;
+
+        contenedor.appendChild(card);
+
+        setTimeout(() => {
+            dibujarGauge(idCanvas, item.valor);
+        }, 50);
+    });
+    }
+
+    function dibujarGauge(canvasId, valor){
+
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+
+        const porcentaje = valor;
+        const color = porcentaje >= 75 ? "green" : "red";   
+
+        new Chart(canvas, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [porcentaje, 100 - porcentaje],
+                    backgroundColor: [color, "#ccc"],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                rotation: -90,
+                circumference: 180,
+                cutout: "70%",
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                }
+            },
+            plugins: [{
+                id: 'textoCentral',
+                afterDraw(chart){
+
+                    let {ctx} = chart;
+
+                    ctx.save();
+                    ctx.font = "16px Arial";
+                    ctx.fillStyle = "#000";
+                    ctx.textAlign = "center";
+
+                    ctx.fillText(
+                        porcentaje.toFixed(2) + " %",
+                        chart.width / 2,
+                        chart.height / 1.4
+                    );
+
+                    ctx.restore();
+                }
+            }]
+        });
+    }
+
+
+function calcularTNPSGlobal() {
+
+    let promotores = 0;
+    let detractores = 0;
+    let total = 0;
+
+    datosGlobales.forEach(r => {
+
+        let site = (r.site || "").toLowerCase().trim();
+
+        if (!site.includes("santa")) return;
+
+        if (r.tipo === "Promotor") promotores++;
+        else if (r.tipo === "Detractor") detractores++;
+
+        total++;
+    });
+
+    if (total === 0) return 0;
+
+    return ((promotores - detractores) / total) * 100;
+}
+
+
+
+    function obtenerTNPSMes() {
+
+        const filas = document.querySelectorAll("#tabla3 tbody tr");
+
+        for (let fila of filas) {
+
+            let texto = fila.cells[0]?.textContent || "";
+            texto = texto.toLowerCase().trim();
+
+            // ✅ detectar cualquier variación
+            if (
+                texto.includes("tnps acumulado") ||
+                texto.includes("tnps") && texto.includes("acumulado")
+            ) {
+                
+            let raw = fila.cells[1]?.textContent || "0";
+                raw = raw.replace("%", "").trim();
+
+            return parseFloat(raw) || 0;
+
+            }
+        }
+
+        return 0;
+    }
+
+function obtenerDatosGraficoLinea() {
+
+    let resultado = {
+        "10:00": { promotores: 0, detractores: 0, total: 0, tnps: 0 },
+        "14:00": { promotores: 0, detractores: 0, total: 0, tnps: 0 },
+        "21:00": { promotores: 0, detractores: 0, total: 0, tnps: 0 }
+    };
+
+    datosGlobales.forEach(r => {
+
+        // ✅ 🔥 FILTRO CORRECTO (EL QUE TE FALTABA)
+        let site = (r.site || "").toLowerCase().trim();
+
+        if (site !== "santa ana" && site !== "santa elena") return;
+
+        // ✅ validar hora
+        if (!r.hora) return;
+
+        let h = parseInt(r.hora);
+        if (isNaN(h)) return;
+
+        // ✅ RANGO 1
+        if (h >= 0 && h < 10) {
+
+            if (r.tipo === "Promotor") resultado["10:00"].promotores++;
+            if (r.tipo === "Detractor") resultado["10:00"].detractores++;
+
+            resultado["10:00"].total++;
+        }
+
+        // ✅ RANGO 2
+        else if (h >= 10 && h < 14) {
+
+            if (r.tipo === "Promotor") resultado["14:00"].promotores++;
+            if (r.tipo === "Detractor") resultado["14:00"].detractores++;
+
+            resultado["14:00"].total++;
+        }
+
+        // ✅ RANGO 3
+        else if (h >= 14 && h < 21) {
+
+            if (r.tipo === "Promotor") resultado["21:00"].promotores++;
+            if (r.tipo === "Detractor") resultado["21:00"].detractores++;
+
+            resultado["21:00"].total++;
+        }
+
+    });
+
+    // ✅ calcular tnps
+    Object.keys(resultado).forEach(k => {
+        let r = resultado[k];
+
+        if (r.total > 0) {
+            r.tnps = ((r.promotores - r.detractores) / r.total) * 100;
+        } else {
+            r.tnps = 0;
+        }
+    });
+
+    console.log("✅ RANGOS FILTRADOS POR SITE:", resultado);
+
+    return resultado;
+}
+
+
+function generarInsightsAutomaticos() {
+
+    const data = obtenerDatosGraficoLinea();
+
+    let insights = [];
+
+    const rangos = Object.keys(data);
+
+    // 📉 detectar caída o subida
+    let valores = rangos.map(r => data[r].tnps);
+
+    if (valores.length >= 2) {
+
+        if (valores[valores.length - 1] < valores[valores.length - 2]) {
+            insights.push("Se observa una caída en el tNPS en el último tramo del día.");
+        }
+
+        if (valores[0] > valores[valores.length - 1]) {
+            insights.push("El tNPS ha disminuido respecto al inicio.");
+        }
+
+        if (valores[valores.length - 1] > valores[0]) {
+            insights.push("Se evidencia recuperación del indicador.");
+        }
+    }
+
+    // 🔴 detractores altos
+    let totalDetractores = 0;
+    let totalEncuestas = 0;
+
+    rangos.forEach(r => {
+        totalDetractores += data[r].detractores;
+        totalEncuestas += data[r].total;
+    });
+
+    let porcentaje = totalEncuestas > 0
+        ? (totalDetractores / totalEncuestas) * 100
+        : 0;
+
+    
+
+
+if (porcentaje > 20) {
+
+    insights.push("Se observa una incidencia relevante de detractores que impacta el indicador.");
+
+} else {
+
+    insights.push("El nivel de detractores se mantiene controlado.");
+
+}
+
+
+    // 📊 volumen bajo
+    if (totalEncuestas > 0 && totalEncuestas < 50) {
+        insights.push("El volumen de encuestas es bajo.");
+    }
+
+    // 🕒 tramo más crítico
+    let peorTramo = null;
+    let peorValor = 999;
+
+    rangos.forEach(r => {
+        if (data[r].total > 0 && data[r].tnps < peorValor) {
+            peorValor = data[r].tnps;
+            peorTramo = r;
+        }
+    });
+
+if (peorTramo) {
+
+    const opcionesHora = [
+
+        `El tramo de ${peorTramo} registra el punto más bajo del indicador con ${peorValor.toFixed(2)} de tNPS.`,
+
+        `Se identifica el horario de ${peorTramo} como el más crítico, alcanzando un tNPS de ${peorValor.toFixed(2)}.`,
+
+        `Durante el tramo de ${peorTramo}, el indicador presenta su nivel más bajo con ${peorValor.toFixed(2)} tNPS.`,
+
+        `El comportamiento más bajo del día se registra a las ${peorTramo}, con un tNPS de ${peorValor.toFixed(2)}.`
+
+    ];
+
+    const textoHora = opcionesHora[Math.floor(Math.random() * opcionesHora.length)];
+
+    insights.push(textoHora);
+}
+
+    return insights;
+}
+
+function generarGraficoLinea() {
+
+    const data = obtenerDatosGraficoLinea(); // ✅ CLAVE
+
+    console.log("DATA GRAFICO FINAL:", data); // ✅ DEBUG
+
+    
+let labels = ["10:00", "14:00", "21:00"];
+
+// ✅ FILTRAR SOLO LOS QUE TIENEN DATOS
+labels = labels.filter(h => data[h] && data[h].total > 0);
+
+const detractores = labels.map(h => data[h]?.detractores || 0);
+const promotores = labels.map(h => data[h]?.promotores || 0);
+const tnps = labels.map(h => data[h]?.tnps || 0);
+
+
+
+    const canvas = document.getElementById("graficoLinea");
+    
+    if (window.miGraficoLinea) {
+        window.miGraficoLinea.destroy();
+    }
+
+    window.miGraficoLinea = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'tNPS HOY',
+                    data: tnps,
+                    borderColor: '#0396a6',
+                    backgroundColor: '#0396a6',
+                    tension: 0.4,
+                    pointRadius: 5
+                },
+                {
+                    label: 'Detractores',
+                    data: detractores,
+                    borderColor: '#ff0000',
+                    backgroundColor: '#ff0000',
+                    tension: 0.4,
+                    pointRadius: 5
+                },
+                {
+                    label: 'Promotores',
+                    data: promotores,
+                    borderColor: '#008000',
+                    backgroundColor: '#008000',
+                    tension: 0.4,
+                    pointRadius: 5
+                }
+            ]
+        },
+
+options: {
+    responsive: true,
+    maintainAspectRatio: false,
+
+    scales: {
+        x: {
+            offset: true,   // ✅ 👈 ESTA ES LA LÍNEA MÁS IMPORTANTE
+            ticks: {
+                padding: 10  // ✅ separa un poco las etiquetas
+            }
+        }
+    }
+},
+
+// ✅ PLUGIN PARA MOSTRAR VALORES
+plugins: [{
+    id: 'valoresPuntos',
+    afterDatasetsDraw(chart) {
+
+        const { ctx } = chart;
+
+        chart.data.datasets.forEach((dataset, i) => {
+            const meta = chart.getDatasetMeta(i);
+
+            meta.data.forEach((point, index) => {
+
+                let valor = dataset.data[index];
+
+                if (valor === 0) return;
+
+                ctx.save();
+
+                ctx.font = "17px Arial";
+                ctx.fillStyle = "#000";
+                ctx.textAlign = "center";
+
+                // ✅ FORMATO tnps con 2 decimales
+                if (dataset.label === "tNPS HOY") {
+                    valor = valor.toFixed(2);
+                }
+
+                ctx.fillText(valor, point.x, point.y - 8);
+
+                ctx.restore();
+            });
+        });
+    }
+}]
+    });
+}
+
+function obtenerResumenGeneral() {
+
+    let total = 0;
+    let detractores = 0;
+    let promotores = 0;
+
+    datosGlobales.forEach(r => {
+
+        if (!r.site) return;
+
+        if ((r.site || "").toLowerCase().includes("santa")) {
+
+            total++;
+
+            if (r.tipo === "Detractor") detractores++;
+            if (r.tipo === "Promotor") promotores++;
+        }
+    });
+
+    return {
+        total,
+        detractores,
+        promotores
+    };
+}
+
+
+function generarCardsResumen() {
+
+    const contenedor = document.getElementById("cardsResumen");
+    contenedor.innerHTML = "";
+
+    const data = obtenerResumenGeneral();
+
+    const cards = [
+        {
+            nombre: "Total Encuestas",
+            valor: data.total,
+            color: "#444"
+        },
+        {
+            nombre: "Detractores",
+            valor: data.detractores,
+            color: "#ee2323"
+        },
+        {
+            nombre: "Promotores",
+            valor: data.promotores,
+            color: "#008000"
+        }
+    ];
+
+    cards.forEach(c => {
+
+        let div = document.createElement("div");
+        div.className = "card-resumen";
+
+        div.innerHTML = `
+            <div class="card-resumen-titulo">${c.nombre}</div>
+            <div class="card-resumen-valor" style="color:${c.color}">
+                ${c.valor}
+            </div>
+        `;
+
+        contenedor.appendChild(div);
+    });
+}
+
+document.getElementById("btnArchivo").addEventListener("click", function() {
+    document.getElementById("fileInput").click();
+});
+
+document.getElementById("cerrarNota").addEventListener("click", function() {
+    document.getElementById("notaMovible").style.display = "none";
+});
+
+const nota = document.getElementById("notaMovible");
+const header = document.getElementById("notaHeader");
+
+let offsetX = 0, offsetY = 0;
+let isDragging = false;
+
+header.onmousedown = function(e) {
+    isDragging = true;
+
+    offsetX = e.clientX - nota.offsetLeft;
+    offsetY = e.clientY - nota.offsetTop;
+};
+
+document.onmousemove = function(e) {
+    if (isDragging) {
+        nota.style.left = (e.clientX - offsetX) + "px";
+        nota.style.top = (e.clientY - offsetY) + "px";
+        nota.style.transform = "none";
+    }
+};
+
+document.onmouseup = function() {
+    isDragging = false;
+};
+
+document.getElementById("copiarTNPS").addEventListener("click", function () {
+
+    const tabla = document.getElementById("tablaTNPS");
+
+    if (!navigator.clipboard) {
+        alert("Clipboard no soportado");
+        return;
+    }
+
+    // ✅ contenedor limpio
+    const wrapper = document.createElement("div");
+    wrapper.style.position = "absolute";
+    wrapper.style.left = "-9999px";
+    wrapper.style.background = "#ffffff";
+    wrapper.style.padding = "20px";
+    wrapper.style.width = "auto";
+
+    const clone = tabla.cloneNode(true);
+
+    // ✅ 🔥 MUY IMPORTANTE (estructura Excel)
+    clone.style.tableLayout = "auto";
+    clone.style.borderCollapse = "collapse";
+    clone.style.width = "auto";
+
+    wrapper.appendChild(clone);
+    document.body.appendChild(wrapper);
+
+    // ✅ cálculo escala sin deformar
+    const scale = 3;  // 🔥 calidad 4K-like sin romper layout
+
+    html2canvas(wrapper, {
+        scale: scale,
+        backgroundColor: "#ffffff",
+        useCORS: true
+    }).then(async (canvas) => {
+        // ✅ duplicar calidad SIN deformar
+const canvasAlta = document.createElement("canvas");
+canvasAlta.width = canvas.width * 2;
+canvasAlta.height = canvas.height * 2;
+
+const ctx = canvasAlta.getContext("2d");
+ctx.scale(2, 2);
+ctx.drawImage(canvas, 0, 0);
+
+
+        canvasAlta.toBlob(async (blob) => {
+            try {
+                await navigator.clipboard.write([
+                    new ClipboardItem({ "image/png": blob })
+                ]);
+                alert("Tabla copiada ✅ (formato Excel limpio)");
+            } catch (err) {
+                console.error(err);
+                alert("Error al copiar ❌");
+            }
+
+            document.body.removeChild(wrapper);
+        });
+    });
+
+});
+
+function obtenerEncuestasPorHora() {
+
+    let horas = {};
+
+    // ✅ crear 00 a 23
+    for (let i = 0; i < 24; i++) {
+        let key = i.toString().padStart(2, "0") + ":00";
+        horas[key] = 0;
+    }
+
+    datosGlobales.forEach(r => {
+
+        // ✅ usar la hora procesada (clave del sistema)
+        if (!r.hora) return;
+
+        let h = parseInt(r.hora);
+        if (isNaN(h)) return;
+
+        let key = h.toString().padStart(2, "0") + ":00";
+
+        if (horas[key] !== undefined) {
+            horas[key]++;
+        }
+
+    });
+
+    console.log("ENCUESTAS POR HORA:", horas); // 🔍 debug
+
+    return horas;
+}
+
+
+
+function generarGraficoEncuestasHora() {
+
+    const data = obtenerEncuestasPorHora();
+
+    
+const labels = Object.keys(data).filter(h => data[h] > 0);
+const valores = labels.map(h => data[h]);
+
+
+    const canvas = document.getElementById("graficoEncuestasHora");
+
+    if (window.miGraficoHora) {
+        window.miGraficoHora.destroy();
+    }
+
+    window.miGraficoHora = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Encuestas por hora',
+                data: valores,
+                borderColor: '#0396a6',
+                backgroundColor: '#0396a6',
+                tension: 0.4,
+                pointRadius: 5,
+                pointBackgroundColor: '#0396a6'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    labels: { color: "#333" }
+                }
+            },
+
+            scales: {
+                x: {
+                    ticks: { color: "#333" }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: "#333" }
+                }
+            }
+        },
+
+        // ✅ mostrar valor en cada punto
+        plugins: [{
+            id: 'puntosTexto',
+            afterDatasetsDraw(chart) {
+
+                const { ctx } = chart;
+
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+
+                    meta.data.forEach((point, index) => {
+
+                        const valor = dataset.data[index];
+                        if (valor === 0) return;
+
+                        ctx.fillStyle = "#000";
+                        ctx.font = "12px Arial";
+                        ctx.textAlign = "center";
+
+                        ctx.fillText(valor, point.x, point.y - 8);
+                    });
+                });
+            }
+        }]
+    });
+}
+
+function calcularPromotoresMeta(supervisorNombre) {
+
+    let datos = datosGlobales.filter(r => 
+        r.supervisor === supervisorNombre
+    );
+
+    let promotores = 0;
+    let pasivos = 0;
+    let detractores = 0;
+
+    datos.forEach(r => {
+        if (r.tipo === "Promotor") promotores++;
+        else if (r.tipo === "Pasivo") pasivos++;
+        else if (r.tipo === "Detractor") detractores++;
+    });
+
+    let meta = 0.75;
+
+    let necesarios = Math.max(0,
+        Math.ceil(
+            ((1 + meta) * detractores +
+             meta * pasivos -
+             (1 - meta) * promotores)
+            / (1 - meta)
+        )
+    );
+
+    return necesarios;
+}
+
+function generarCardsMetaTNPS() {
+
+    const contenedor = document.getElementById("cardsMetaTNPS");
+    contenedor.innerHTML = "";
+
+    const supervisores = [
+        "Erika Martinez",
+        "Jaime Flores",
+        "Erick Morales",
+        "Rodrigo Gomez",
+        "Gerardo Leiva"
+    ];
+
+    supervisores.forEach(nombre => {
+
+        let faltantes = calcularPromotoresMeta(nombre);
+
+        let color = faltantes === 0 ? "#008000" : "#ee2323";
+
+        let card = document.createElement("div");
+        card.className = "card-supervisor";
+
+        card.innerHTML = `
+            <div class="card-nombre">${nombre}</div>
+            <div class="card-tnps" style="color:${color}">
+                +${faltantes}
+            </div>
+        `;
+
+        contenedor.appendChild(card);
+    });
+}
+
+document.getElementById("btnCopiarMini").addEventListener("click", function () {
+
+    const elemento = document.getElementById("miniPizarraMeta");
+    const btn = document.getElementById("btnCopiarMini");
+
+    if (!navigator.clipboard) {
+        alert("Clipboard no soportado");
+        return;
+    }
+
+    // ✅ ocultar botón antes de captura
+    btn.style.display = "none";
+
+    html2canvas(elemento, {
+        scale: 1,                 // ✅ buena calidad
+        backgroundColor: "#ffffff",
+        useCORS: true
+    }).then(async (canvas) => {
+
+        // ✅ volver a mostrar botón
+        btn.style.display = "block";
+
+        canvas.toBlob(async (blob) => {
+            try {
+                await navigator.clipboard.write([
+                    new ClipboardItem({ "image/png": blob })
+                ]);
+                alert("Mini pizarra copiada ✅");
+            } catch (error) {
+                console.error(error);
+                alert("Error al copiar ❌");
+            }
+        });
+
+    });
+
+});
+
+
+function generarMensajeDinamico() {
+
+    try {
+
+        const tnpsDia = calcularTNPSGlobal();
+        const tnpsMes = obtenerTNPSMes();
+        const resumen = obtenerResumenGeneral();
+
+        const porHora = metricasGlobales.porHora || {};
+        const porSupervisor = metricasGlobales.porSupervisor || {};
+
+        const supervisores = [
+            "Erika Martinez",
+            "Jaime Flores",
+            "Erick Morales",
+            "Rodrigo Gomez",
+            "Gerardo Leiva"
+        ];
+
+        const horaActual = new Date().getHours();
+        const saludo = horaActual < 12 ? "Buenos días."
+                    : horaActual < 18 ? "Buenas tardes."
+                    : "Buenas noches.";
+
+        function random(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        let peorHora = null;
+        let peorValor = 999;
+
+        Object.entries(porHora).forEach(([hora, d]) => {
+            if (d && d.total > 0 && d.tnps < peorValor) {
+                peorValor = d.tnps;
+                peorHora = hora;
+            }
+        });
+
+        
+let horaCriticaTexto = peorHora 
+    ? `El tramo de ${peorHora} presenta el punto más bajo del indicador con ${peorValor.toFixed(2)} tNPS durante esa hora.` 
+    : "";
+
+
+        let totalDetractores = 0;
+        let totalEncuestas = 0;
+
+        Object.values(porHora).forEach(d => {
+            if (!d) return;
+            totalDetractores += d.detractores || 0;
+            totalEncuestas += d.total || 0;
+        });
+
+        
+let impactoTexto = "";
+
+// 🔴 opciones negativas
+const opcionesImpacto = [
+    "Se evidencia un impacto relevante de detractores a lo largo del día.",
+    "Se registra una presencia significativa de detractores que afecta el comportamiento del indicador durante la jornada.",
+    "El desempeño del día se ve influenciado por una participación importante de detractores.",
+    "Se observa una incidencia considerable de detractores que repercute en el resultado diario.",
+    "El indicador presenta variación debido a la influencia notable de detractores durante el día."
+];
+
+// 🟢 opciones positivas
+const opcionesControl = [
+    "El nivel de detractores se mantiene controlado durante la jornada.",
+    "Se observa un comportamiento estable con detractores dentro de niveles esperados.",
+    "El indicador se mantiene balanceado, con una incidencia controlada de detractores.",
+    "Los detractores se encuentran dentro de un rango controlado en la operación.",
+    "Se mantiene estabilidad en el indicador, con nivel de detractores bajo control."
+];
+
+if (tnpsDia < 75) {
+
+    impactoTexto = opcionesImpacto[Math.floor(Math.random() * opcionesImpacto.length)];
+
+} else {
+
+    impactoTexto = opcionesControl[Math.floor(Math.random() * opcionesControl.length)];
+
+}
+
+  
+
+        let estado = "";
+
+        if (tnpsDia >= 80) {
+            estado = "Buen desempeño general.";
+        } else if (tnpsDia >= 75) {
+            estado = "Resultado en control.";
+        } else {
+            estado = "Resultado por debajo de meta.";
+        }
+
+        let mensaje = `${saludo}\n\n`;
+
+        mensaje += `🔔 Actualización tNPS\n\n`;
+        mensaje += `${estado}\n\n`;
+
+        mensaje += `tNPS del día: ${tnpsDia.toFixed(2)}% | Acumulado del mes: ${tnpsMes.toFixed(2)}%\n\n`;
+
+        // ✅ calcular porcentaje de detractores
+let porcentajeDetractores = 0;
+
+if (resumen.total > 0) {
+    porcentajeDetractores = (resumen.detractores / resumen.total) * 100;
+}
+
+// ✅ calcular promotores necesarios del equipo
+const listaSupervisores = [
+    "Erika Martinez",
+    "Jaime Flores",
+    "Erick Morales",
+    "Rodrigo Gomez",
+    "Gerardo Leiva"
+];
+
+let promotoresNecesariosEquipo = 0;
+
+listaSupervisores.forEach(nombre => {
+    promotoresNecesariosEquipo += calcularPromotoresMeta(nombre);
+});
+
+// ✅ opciones dinámicas
+let opciones = [];
+
+if (tnpsDia < 75 && promotoresNecesariosEquipo > 0) {
+
+    opciones = [
+
+        `Actualmente contamos con un ${porcentajeDetractores.toFixed(1)}% de detractores; como equipo, necesitamos ${promotoresNecesariosEquipo} promotores adicionales para alcanzar la meta del día.`,
+
+        `El ${porcentajeDetractores.toFixed(1)}% de las encuestas corresponden a detractores; para lograr el objetivo de tNPS 75, se requieren ${promotoresNecesariosEquipo} promotores adicionales.`,
+
+        `Se registra un ${porcentajeDetractores.toFixed(1)}% de detractores en el día; para llegar a la meta, el equipo necesita generar ${promotoresNecesariosEquipo} promotores adicionales.`
+
+    ];
+
+} else {
+
+    opciones = [
+
+        `El nivel de detractores se mantiene en ${porcentajeDetractores.toFixed(1)}%, con el indicador dentro de meta.`,
+
+        `Se observa un comportamiento favorable con ${porcentajeDetractores.toFixed(1)}% de detractores en la operación.`,
+
+        `El indicador se mantiene controlado, registrando ${porcentajeDetractores.toFixed(1)}% de detractores.`
+
+    ];
+}
+
+// ✅ elegir uno aleatorio
+const mensajeDinamico = opciones[Math.floor(Math.random() * opciones.length)];
+
+mensaje += mensajeDinamico + "\n\n";
+
+        mensaje += `📊 Análisis:\n`;
+
+        if (impactoTexto) mensaje += `- ${impactoTexto}\n`;
+        if (horaCriticaTexto) mensaje += `- ${horaCriticaTexto}\n`;
+        mensaje += obtenerTextoPeorHora();
+
+        mensaje += "\n";
+
+        let criticos = [];
+
+        supervisores.forEach(nombre => {
+            let faltantes = calcularPromotoresMeta(nombre);
+            if (!isNaN(faltantes) && faltantes > 0) {
+                criticos.push({ nombre, faltantes });
+            }
+        });
+
+        if (criticos.length > 0) {
+
+            mensaje += `Promotores necesarios:\n\n`;
+
+            criticos.forEach(s => {
+                if (s.nombre) {
+                    mensaje += `@${s.nombre.split(" ")[0]}: ${s.faltantes}\n`;
+                }
+            });
+
+            mensaje += "\n";
+        }
+
+        mensaje += "📌 Monitoreando indicador.";
+
+        return mensaje;
+
+    } catch (error) {
+
+        console.error("ERROR MENSAJE:", error);
+
+        return "❌ Error al generar mensaje. Revisa consola (F12).";
+    }
+}
+
+
+
+function calcularMetricasGlobales() {
+
+    let porHora = {};
+    let porSupervisor = {};
+
+    datosGlobales.forEach(r => {
+
+        // 🔹 POR HORA
+        if (r.hora) {
+
+            let key = r.hora.padStart(2, "0") + ":00";
+
+            if (!porHora[key]) {
+                porHora[key] = {
+                    promotores: 0,
+                    detractores: 0,
+                    total: 0
+                };
+            }
+
+            if (r.tipo === "Promotor") porHora[key].promotores++;
+            if (r.tipo === "Detractor") porHora[key].detractores++;
+
+            porHora[key].total++;
+        }
+
+        // 🔹 POR SUPERVISOR
+        if (r.supervisor) {
+
+            if (!porSupervisor[r.supervisor]) {
+                porSupervisor[r.supervisor] = 0;
+            }
+
+            porSupervisor[r.supervisor]++;
+        }
+    });
+
+    // ✅ calcular tnps por hora
+    Object.keys(porHora).forEach(h => {
+        let d = porHora[h];
+
+        d.tnps = d.total > 0
+            ? ((d.promotores - d.detractores) / d.total) * 100
+            : 0;
+    });
+
+    metricasGlobales = {
+        porHora,
+        porSupervisor
+    };
+
+    console.log("✅ Métricas listas:", metricasGlobales);
+}
+
+function generarInsightAdicional() {
+
+    const porSupervisor = metricasGlobales.porSupervisor || {};
+    const porHora = metricasGlobales.porHora || {};
+
+    let menorSupervisor = null;
+    let menorCantidad = Infinity;
+
+    Object.entries(porSupervisor).forEach(([sup, total]) => {
+        if (total < menorCantidad) {
+            menorCantidad = total;
+            menorSupervisor = sup;
+        }
+    });
+
+    let peorHora = null;
+    let maxDetractores = 0;
+
+    Object.entries(porHora).forEach(([hora, d]) => {
+        if (d.detractores > maxDetractores) {
+            maxDetractores = d.detractores;
+            peorHora = hora;
+        }
+    });
+
+    let texto = "";
+
+    // ✅ obtener última hora con datos
+    let ultimaHora = null;
+
+    Object.keys(porHora).forEach(h => {
+        if (porHora[h].total > 0) {
+            if (!ultimaHora || h > ultimaHora) {
+                ultimaHora = h;
+            }
+        }
+    });
+
+    // 🔹 detectar supervisores sin encuestas
+    const listaSupervisores = [
+        "Erika Martinez",
+        "Jaime Flores",
+        "Erick Morales",
+        "Rodrigo Gomez",
+        "Gerardo Leiva"
+    ];
+
+    let sinEncuestas = [];
+
+    listaSupervisores.forEach(nombre => {
+
+        let total = 0;
+
+        datosGlobales.forEach(r => {
+            if (r.supervisor === nombre) total++;
+        });
+
+        if (total === 0) {
+            sinEncuestas.push(nombre);
+        }
+
+    });
+
+    // ✅ PRIORIDAD: si hay supervisores sin encuestas, ellos son el menor volumen
+    if (sinEncuestas.length > 0) {
+        menorSupervisor = sinEncuestas[0];
+        menorCantidad = 0;
+    }
+
+    // ✅ texto adaptado (sin 0 interacciones)
+ 
+let cantidadTexto = menorCantidad === 0
+    ? "(0)"
+    : `(${menorCantidad})`;
+
+
+    let opcionesInsight = [];
+
+    // ✅ construir mensaje principal
+if (menorSupervisor) {
+
+    opcionesInsight = [
+
+        `Durante el día, ${menorSupervisor} registra el menor volumen de encuestas ${cantidadTexto} al corte de las ${ultimaHora}.`,
+
+        `Se observa que ${menorSupervisor} presenta el menor cantidad de encuestas ${cantidadTexto} hasta las ${ultimaHora}.`,
+
+        `Al cierre parcial de las ${ultimaHora}, ${menorSupervisor} mantiene la menor cantidad de encuestas ${cantidadTexto}.`,
+
+        `El menor flujo de encuestas corresponde a ${menorSupervisor} con ${cantidadTexto} al corte de las ${ultimaHora}.`
+
+    ];
+
+} else if (menorSupervisor) {
+
+        opcionesInsight = [
+            `${menorSupervisor} presenta el menor volumen de encuestas (${cantidadTexto}) al corte actual.`,
+            `Se observa bajo flujo de encuestas en ${menorSupervisor} con ${cantidadTexto}.`,
+            `${menorSupervisor} registra la menor cantidad de encuestas con ${cantidadTexto}.`,
+            `El menor nivel de encuestas se concentra en ${menorSupervisor} (${cantidadTexto}).`
+        ];
+
+    } else if (peorHora) {
+
+        opcionesInsight = [
+            `La mayor incidencia de detractores se identifica a las ${peorHora} con ${maxDetractores} casos.`,
+            `Se concentra un mayor número de detractores a las ${peorHora} (${maxDetractores}).`,
+            `El tramo más crítico del día se registra a las ${peorHora} con ${maxDetractores} detractores.`,
+            `Se identifica la hora ${peorHora} como el punto con mayor afectación de detractores (${maxDetractores}).`
+        ];
+    }
+
+    // ✅ elegir aleatorio
+    const insightFinal = opcionesInsight[Math.floor(Math.random() * opcionesInsight.length)];
+
+    texto += insightFinal + "\n";
+
+    // ✅ SOLO agregar esta línea si hay más de 1 sin encuestas
+    if (sinEncuestas.length > 1) {
+        texto += `Adicionalmente, no se registran encuestas para: ${sinEncuestas.slice(1).join(", ")}.\n`;
+    }
+
+    return texto;
+}
+
+document.getElementById("btnGenerarMensaje").addEventListener("click", function () {
+
+    const modal = document.getElementById("modalMensaje");
+    const textarea = document.getElementById("textoMensaje");
+    const loading = document.getElementById("loadingMensaje");
+
+    // mostrar modal
+    modal.style.display = "block";
+
+    // limpiar texto
+    textarea.value = "";
+
+    // mostrar loading
+    loading.style.display = "block";
+
+    setTimeout(() => {
+
+        
+let mensaje = generarMensajeDinamico();
+
+// ✅ 🔥 ESTA ES LA LÍNEA QUE TE FALTABA
+mensaje += "\n\n" + generarInsightAdicional();
+// ✅ textos finales dinámicos
+const opcionesFinales = [
+
+    "Adicional, compartimos el detalle de resultados actuales por asesor 👇",
+
+    "A continuación, se presenta el comportamiento actual por asesor 👇",
+
+    "Compartimos a continuación el desglose actualizado de desempeño por asesor 👇",
+
+    "Se adjunta el detalle de resultados actuales gestionados por asesor 👇"
+
+];
+
+// ✅ elegir uno aleatorio
+const textoFinal = opcionesFinales[Math.floor(Math.random() * opcionesFinales.length)];
+
+mensaje += "\n" + textoFinal;
+``
+
+
+        textarea.value = mensaje;
+
+        loading.style.display = "none";
+
+    }, 100);
+});
+
+// ✅ BOTÓN CERRAR MODAL MENSAJE
+document.getElementById("cerrarModalMensaje").onclick = () => {
+    document.getElementById("modalMensaje").style.display = "none";
+};
+
+document.getElementById("copiarMensaje").addEventListener("click", function () {
+
+    const textarea = document.getElementById("textoMensaje");
+
+    if (!textarea.value) {
+        alert("No hay mensaje para copiar ❌");
+        return;
+    }
+
+    navigator.clipboard.writeText(textarea.value)
+        .then(() => {
+            alert("Mensaje copiado ✅");
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error al copiar ❌");
+        });
+});
+
+function cargarLicencias(callback = null) {
+
+    const urlExcel = "https://raw.githubusercontent.com/Juank930/tNPS-Diario/main/Licencias.xlsx";
+
+    fetch(urlExcel)
+        .then(res => res.arrayBuffer())
+        .then(data => {
+
+            const workbook = XLSX.read(data, { type: "array" });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet);
+
+            mapaLicencias = {};
+
+            json.forEach(row => {
+
+                const operador = (row["Operador"] || "")
+                    .toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, "");
+
+                if (operador) {
+                    mapaLicencias[operador] = {
+                        supervisor: row["Supervisor"] || "",
+                        site: row["Sitio"] || ""
+                    };
+                }
+
+            });
+
+            licenciasCargadas = true;
+
+            renderLicenciasDesdeJSON(json);
+
+            if (callback) callback();
+
+        })
+        .catch(err => console.error("Error cargando licencias:", err));
+}
+
+
+function renderTabla3(json) {
+
+    
+    const thead = document.querySelector("#tabla3 thead");
+    const tbody = document.querySelector("#tabla3 tbody");
+
+    // ✅ 🔴 PROTECCIÓN TOTAL
+    if (!thead || !tbody) return;
+
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
+
+    if (!json || json.length === 0) {
+
+        // ✅ ✅ MOSTRAR encabezados SIEMPRE
+        let trHead = document.createElement("tr");
+        ["Comentario", "Dato"].forEach(txt => {
+            let th = document.createElement("th");
+            th.textContent = txt;
+            trHead.appendChild(th);
+        });
+        thead.appendChild(trHead);
+
+        tbody.innerHTML = "<tr><td colspan='2'>⚠️ Sin datos para mostrar</td></tr>";
+
+        return;
+    }
+
+
+    let trHead = document.createElement("tr");
+
+    ["Comentario", "Dato"].forEach(txt => {
+        let th = document.createElement("th");
+        th.textContent = txt;
+        trHead.appendChild(th);
+    });
+
+    thead.appendChild(trHead);
+
+    json.forEach(row => {
+
+        let tr = document.createElement("tr");
+
+        let tdComentario = document.createElement("td");
+        tdComentario.textContent = row.comentario || "";
+
+        let tdDato = document.createElement("td");
+
+// ✅ permite editar
+tdDato.contentEditable = true;
+tdDato.textContent = row.dato ?? "";
+
+// ✅ validar números en tiempo real
+tdDato.addEventListener("input", function () {
+
+    let valor = tdDato.textContent.replace(",", ".");
+
+    if (isNaN(valor)) {
+        tdDato.style.background = "#ffcccc"; // rojo si es inválido
+    } else {
+        tdDato.style.background = ""; // normal si es número
+    }
+
+});
+
+
+        tr.appendChild(tdComentario);
+        tr.appendChild(tdDato);
+
+        tbody.appendChild(tr);
+    });
+}
+
+
+function guardarTabla3() {
+
+    // ✅ PEDIR CONTRASEÑA
+    
+if (!accesoPermitido) {
+    pedirClave();
+    return;
+}
+
+// reset para próxima vez
+accesoPermitido = false;
+
+
+    const filas = document.querySelectorAll("#tabla3 tbody tr");
+
+    let data = [];
+
+    filas.forEach(fila => {
+
+        const comentario = fila.cells[0].textContent;
+        const dato = parseFloat(fila.cells[1].textContent) || 0;
+
+        data.push({
+            comentario: comentario,
+            dato: dato
+        });
+    });
+
+    fetch(URL_BIN_PUT, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "X-Master-Key": API_KEY
+        },
+        body: JSON.stringify({
+            record: data
+        })
+    })
+    .then(() => alert("✅ Guardado correctamente"))
+    .catch(err => console.error("Error:", err));
+}
+
+
+
+function renderLicenciasDesdeJSON(json) {
+
+    const thead = document.querySelector("#tablaLicencias thead");
+    const tbody = document.querySelector("#tablaLicencias tbody");
+
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
+
+    if (!json.length) return;
+
+    const headers = Object.keys(json[0]);
+
+    let trHead = document.createElement("tr");
+    headers.forEach(h => {
+        let th = document.createElement("th");
+        th.textContent = h;
+        trHead.appendChild(th);
+    });
+    thead.appendChild(trHead);
+
+    json.forEach(row => {
+        let tr = document.createElement("tr");
+
+        headers.forEach(h => {
+            let td = document.createElement("td");
+            td.textContent = row[h] || "";
+            tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+    });
+}
+
+function obtenerTextoPeorHora() {
+
+    const porHora = metricasGlobales.porHora || {};
+
+    let peorHora = null;
+    let maxDetractores = 0;
+
+    Object.entries(porHora).forEach(([hora, d]) => {
+        if (d.detractores > maxDetractores) {
+            maxDetractores = d.detractores;
+            peorHora = hora;
+        }
+    });
+
+    if (!peorHora) return "";
+
+    // ✅ opciones dinámicas
+    const opciones = [
+
+        `- La mayor concentración de detractores se registra a las ${peorHora} con un total de ${maxDetractores} casos.`,
+
+        `- Se identifica las ${peorHora} como el horario con mayor incidencia de detractores, alcanzando ${maxDetractores} casos.`,
+
+        `- El tramo de las ${peorHora} concentra el mayor número de detractores con ${maxDetractores} registros.`,
+
+        `- Durante las ${peorHora} se presenta incremento de detractores, con un total de ${maxDetractores}.`
+
+    ];
+
+    // ✅ elegir uno aleatorio
+    return opciones[Math.floor(Math.random() * opciones.length)] + "\n";
+}
+
+function generarCardFecha() {
+
+    const titulo = document.getElementById("tituloPizarra");
+    if (!titulo) return;
+
+    if (!datosGlobales || datosGlobales.length === 0) return;
+
+    let fechaRaw = datosGlobales.find(r => r.fecha)?.fecha;
+
+    if (!fechaRaw) return;
+
+    let fecha;
+
+    // ✅ número Excel
+    if (typeof fechaRaw === "number") {
+        
+fecha = new Date((fechaRaw - 25569) * 86400 * 1000);
+
+// ✅ AJUSTE DE ZONA HORARIA
+fecha.setHours(fecha.getHours() + 6);
+
+    } else {
+        fecha = new Date(fechaRaw);
+    }
+
+    if (!fecha || isNaN(fecha)) return;
+
+    const meses = [
+        "enero","febrero","marzo","abril","mayo","junio",
+        "julio","agosto","septiembre","octubre","noviembre","diciembre"
+    ];
+
+    const dia = fecha.getDate();
+    const mes = meses[fecha.getMonth()];
+
+    // ✅ actualizar título
+    
+const spanFecha = document.getElementById("fechaInline");
+
+if (spanFecha) {
+    spanFecha.textContent = `| ${dia} de ${mes}`;
+}
+
+}
+
+let accesoPermitido = false;
+
+function pedirClave() {
+    document.getElementById("modalPassword").style.display = "block";
+    return false; // detiene ejecución hasta validar
+}
+
+function validarPassword() {
+
+    const claveCorrecta = "Claro$2026";
+    const input = document.getElementById("inputPassword").value;
+
+    if (input === claveCorrecta) {
+
+        accesoPermitido = true;
+
+        document.getElementById("modalPassword").style.display = "none";
+
+        guardarTabla3(); // ✅ continúa proceso
+
+    } else {
+        alert("❌ Contraseña incorrecta");
+    }
+}
+
+function cerrarPassword() {
+    document.getElementById("modalPassword").style.display = "none";
+}
+
+
+document.getElementById("btnGuardarTabla3")
+    .addEventListener("click", guardarTabla3);
+
+
+    
+
+    </script>
+
+    </body>
+    </html>
