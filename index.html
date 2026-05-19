@@ -1,6 +1,7 @@
     <!DOCTYPE html>
     <html lang="es">
     <head>
+
         
 
         <meta charset="UTF-8">
@@ -637,6 +638,8 @@
     font-size: 16px;
 }
 
+
+
     </style>
 
     <body>
@@ -982,43 +985,35 @@ function procesarDatos(data) {
 
 
     function renderTabla() {
-        const tbody = document.querySelector("#tabla tbody");
-        tbody.innerHTML = "";
+    const tbody = document.querySelector("#tabla tbody");
+    tbody.innerHTML = "";
 
-        
     let mostrar = datosGlobales
         .filter(row => row.supervisor && row.supervisor.trim() !== "")
         .filter(row => {
-            // 🔹 Si no hay selección → mostrar todo
             if (supervisoresSeleccionados.length === 0) return true;
-
-            // 🔹 Si hay selección → solo los elegidos
             return supervisoresSeleccionados.includes(row.supervisor);
         })
         .slice(0, 100);
 
+    mostrar.forEach(row => {
+        let tr = document.createElement("tr");
 
+        tr.innerHTML = `
+            <td>${row.hora}</td>
+            <td>${row.operador}</td>
+            <td>${row.skill}</td>
+            <td>${row.canal}</td>
+            <td>${row.nota}</td>
+            <td>${row.tipo}</td>
+            <td>${row.encuesta}</td>
+            <td>${row.supervisor || ""}</td>
+            <td>${row.site || ""}</td>
+        `;
 
-        mostrar.forEach(row => {
-            let tr = document.createElement("tr");
-
-
-    tr.innerHTML = `
-        <td>${row.hora}</td> <!-- ✅ NUEVO -->
-        <td>${row.operador}</td>
-        <td>${row.skill}</td>
-        <td>${row.canal}</td>
-        <td>${row.nota}</td>
-        <td>${row.tipo}</td>
-        <td>${row.encuesta}</td>
-        <td>${row.supervisor || ""}</td>
-        <td>${row.site || ""}</td>
-    `;
-
-
-            tbody.appendChild(tr);
-        });
-    }
+        tbody.appendChild(tr);
+    });
+}
     
     const urlLicencias = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRcU_5O6yTR9k9TqkK7bvKOm9ujS2-64f-WvCSQIziijtqNphg8yVJkUsDdZR3rOCxw6yYU6HjdrRg/pub?output=csv";
     const urlTabla3 = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOTpAwD_MQDzqLse2GIcXhNuUtjYnuLVaCH5Wr7nPy4miJ2tXUTm4U6Q2_JFr4czCjDXOTTQNUvRjO/pub?output=csv";
@@ -1184,6 +1179,18 @@ function cargarTabla3() {
         cargarTabla3(); // 🔄 vuelve a traer datos de Google Sheets
     });
 
+    function obtenerColorTNPS(valor) {
+
+    if (valor < 70) {
+        return "#ee2323"; // 🔴 rojo
+    }
+
+    if (valor >= 70 && valor < 75) {
+        return "#ffc107"; // 🟡 amarillo
+    }
+
+    return "#008000"; // 🟢 verde
+}
 
     function generarTablaTNPS() {
 
@@ -1240,29 +1247,32 @@ function cargarTabla3() {
 
         // filas
         
-            Object.entries(resultado)
-            .sort((a, b) => b[1].promotores - a[1].promotores)
-            .forEach(([operador, data]) => {
+Object.entries(resultado)
+.sort((a, b) => b[1].promotores - a[1].promotores)
+.forEach(([operador, data]) => {
 
+    let tNPS = 0;
 
-            let tNPS = 0;
+    if (data.total > 0) {
+        tNPS = ((data.promotores - data.detractores) / data.total) * 100;
+    }
 
-            if (data.total > 0) {
-                tNPS = ((data.promotores - data.detractores) / data.total) * 100;
-            }
+    let colorTNPS = obtenerColorTNPS(tNPS);
 
-            let tr = document.createElement("tr");
+    let tr = document.createElement("tr");
 
-            tr.innerHTML = `
-                <td>${operador}</td>
-                <td>${data.promotores}</td>
-                <td>${data.pasivos}</td>
-                <td>${data.detractores}</td>
-                <td>${tNPS.toFixed(2)} %</td>
-            `;
+    tr.innerHTML = `
+        <td>${operador}</td>
+        <td>${data.promotores}</td>
+        <td>${data.pasivos}</td>
+        <td>${data.detractores}</td>
+        <td style="color:${colorTNPS}; font-weight:bold;">
+            ${tNPS.toFixed(2)} %
+        </td>
+    `;
 
-            tbody.appendChild(tr);
-        });
+    tbody.appendChild(tr);
+});
     }
     function calcularTNPSPorSupervisor(nombreSupervisor) {
 
