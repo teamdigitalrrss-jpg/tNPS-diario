@@ -225,7 +225,7 @@
         background: #f3f3f3;  /* ✅ Color card supervisor */
         border-radius: 50px;
 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.4); /* ✅ sombra */
+        box-shadow: 0 6px 15px rgba(0,0,0,0.25); /* ✅ sombra */
 
         width: 150px;
         height: 70px;
@@ -282,7 +282,7 @@
         background: #f3f3f3; /* ✅ Color minicard */
         border-radius: 50px;
 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.25);
 
         width: 150px;
         height: 70px;
@@ -326,7 +326,7 @@
         background: #f3f3f3;  /* gris más elegante */
         border-radius: 18px;
 
-        box-shadow: 0 6px 9px rgba(0,0,0,0.3);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.25);
 
         width: 220px; /* más ancha */
         height: 130px;  /* más alta */
@@ -360,7 +360,7 @@
     }
 
     #pizarraContainer {
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5); /* sombra externa */
+        box-shadow: 0 6px 15px rgba(0,0,0,0.25); /* sombra externa */
         border: 1px solid rgba(255,255,255,0.1); /* borde sutil */
     }
 
@@ -403,7 +403,7 @@
         border-radius: 10px;
         padding: 15px;
         border: 2px solid rgba(0,0,0,0.15);
-        box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.25);
     }
 
     #cardsResumen {
@@ -421,7 +421,7 @@
     background: #f3f3f3;
 
     border-radius: 18px;
-    box-shadow: 0 6px 9px rgba(0,0,0,0.3);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
 
     width: 220px;     /* ✅ MISMO TAMAÑO */
     height: 145px;
@@ -494,7 +494,7 @@
     border: 2px solid #888;
     border-radius: 15px;
 
-    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
 
     z-index: 9999;
 }
@@ -537,7 +537,7 @@
     padding: 15px;
 
     border: 2px solid rgba(0,0,0,0.15);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
 }
 
 
@@ -570,7 +570,7 @@
     padding: 15px;
 
     border: 2px solid rgba(0,0,0,0.15);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
 }
 
 #tituloMiniPizarra {
@@ -638,7 +638,26 @@
     font-size: 16px;
 }
 
+#btnCamara {
 
+    position: absolute;
+    right: 15px;
+    top: 15px;
+
+    font-size: 28px;
+    cursor: pointer;
+
+    color: #0396a6;
+
+    z-index: 10;
+
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+#btnCamara:hover {
+    transform: scale(1.2);
+    opacity: 0.7;
+}
 
     </style>
 
@@ -791,6 +810,7 @@
 
 <!-- ✅ PIZARRA -->
 <div id="pizarraContainer">
+    <span id="btnCamara">📷</span>
 
 <div id="pizarraHeader">
 <span id="tituloPizarra">
@@ -2977,6 +2997,74 @@ function cerrarPassword() {
     document.getElementById("modalPassword").style.display = "none";
 }
 
+document.getElementById("btnCamara").addEventListener("click", function () {
+
+    const elemento = document.getElementById("pizarraContainer");
+    const btn = document.getElementById("btnCamara");
+
+    if (!navigator.clipboard) {
+        alert("Clipboard no soportado");
+        return;
+    }
+
+    // ✅ ocultar botón antes de captura
+    btn.style.display = "none";
+
+    
+
+html2canvas(elemento, {
+    scale: 4,
+    useCORS: true,
+    backgroundColor: null,
+
+    onclone: (doc) => {
+
+        const selector = `
+            .card-supervisor,
+            .card-acumulado,
+            .card-tnps-site,
+            .card-resumen
+        `;
+
+        doc.querySelectorAll(selector).forEach(el => {
+
+            // ❌ elimina box-shadow original
+            el.style.boxShadow = "none";
+
+            // ✅ fuerza sombra REAL compatible
+            el.style.filter = "drop-shadow(0px 8px 18px rgba(0,0,0,0.45))";
+        });
+}}).then(canvas => {
+
+        // ✅ DUPLICAR calidad (ultra nitidez)
+        const canvasAlta = document.createElement("canvas");
+        canvasAlta.width = canvas.width;
+        canvasAlta.height = canvas.height;
+
+        const ctx = canvasAlta.getContext("2d");
+        ctx.drawImage(canvas, 0, 0);
+
+        canvasAlta.toBlob(async (blob) => {
+
+            try {
+                await navigator.clipboard.write([
+                    new ClipboardItem({ "image/png": blob })
+                ]);
+
+                alert("Pizarra copiada ✅ (4K)");
+
+            } catch (err) {
+                console.error(err);
+                alert("Error al copiar ❌");
+            }
+
+            // ✅ volver a mostrar botón
+            btn.style.display = "block";
+        });
+
+    });
+
+});
 
 document.getElementById("btnGuardarTabla3")
     .addEventListener("click", guardarTabla3);
