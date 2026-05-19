@@ -1700,11 +1700,11 @@ if (peorTramo) {
 
     const opcionesHora = [
 
-        `El tramo de ${peorTramo} registra el punto más bajo del indicador con ${peorValor.toFixed(2)} de tNPS.`,
+        `El periodo de ${peorTramo} registra el punto más bajo del indicador con ${peorValor.toFixed(2)} de tNPS.`,
 
         `Se identifica el horario de ${peorTramo} como el más crítico, alcanzando un tNPS de ${peorValor.toFixed(2)}.`,
 
-        `Durante el tramo de ${peorTramo}, el indicador presenta su nivel más bajo con ${peorValor.toFixed(2)} tNPS.`,
+        `Durante la hora ${peorTramo}, el indicador presenta su nivel más bajo con ${peorValor.toFixed(2)} tNPS.`,
 
         `El comportamiento más bajo del día se registra a las ${peorTramo}, con un tNPS de ${peorValor.toFixed(2)}.`
 
@@ -2231,16 +2231,24 @@ function generarMensajeDinamico() {
         let peorHora = null;
         let peorValor = 999;
 
-        Object.entries(porHora).forEach(([hora, d]) => {
-            if (d && d.total > 0 && d.tnps < peorValor) {
-                peorValor = d.tnps;
-                peorHora = hora;
-            }
-        });
+        
+Object.entries(porHora).forEach(([hora, d]) => {
+
+    let h = parseInt(hora.split(":")[0]);
+
+    // ❌ IGNORAR 00:00 - 07:59
+    if (h < 8) return;
+
+    if (d && d.total > 0 && d.tnps < peorValor) {
+        peorValor = d.tnps;
+        peorHora = hora;
+    }
+});
+
 
         
 let horaCriticaTexto = peorHora 
-    ? `El tramo de ${peorHora} presenta el punto más bajo del indicador con ${peorValor.toFixed(2)} tNPS durante esa hora.` 
+    ? `El periodo de ${peorHora} presenta el punto más bajo del indicador con ${peorValor.toFixed(2)} tNPS durante esa hora.` 
     : "";
 
 
@@ -2474,12 +2482,20 @@ function generarInsightAdicional() {
     let peorHora = null;
     let maxDetractores = 0;
 
-    Object.entries(porHora).forEach(([hora, d]) => {
-        if (d.detractores > maxDetractores) {
-            maxDetractores = d.detractores;
-            peorHora = hora;
-        }
-    });
+    
+Object.entries(porHora).forEach(([hora, d]) => {
+
+    let h = parseInt(hora.split(":")[0]);
+
+    // ❌ IGNORAR 00:00 - 07:59
+    if (h < 8) return;
+
+    if (d.detractores > maxDetractores) {
+        maxDetractores = d.detractores;
+        peorHora = hora;
+    }
+});
+
 
     let texto = "";
 
@@ -2853,12 +2869,20 @@ function obtenerTextoPeorHora() {
     let peorHora = null;
     let maxDetractores = 0;
 
-    Object.entries(porHora).forEach(([hora, d]) => {
-        if (d.detractores > maxDetractores) {
-            maxDetractores = d.detractores;
-            peorHora = hora;
-        }
-    });
+    
+Object.entries(porHora).forEach(([hora, d]) => {
+
+    let h = parseInt(hora.split(":")[0]);
+
+    // ❌ IGNORAR 00:00 - 07:59
+    if (h < 8) return;
+
+    if (d.detractores > maxDetractores) {
+        maxDetractores = d.detractores;
+        peorHora = hora;
+    }
+});
+
 
     if (!peorHora) return "";
 
@@ -2869,7 +2893,7 @@ function obtenerTextoPeorHora() {
 
         `- Se identifica las ${peorHora} como el horario con mayor incidencia de detractores, alcanzando ${maxDetractores} casos.`,
 
-        `- El tramo de las ${peorHora} concentra el mayor número de detractores con ${maxDetractores} registros.`,
+        `- En el periodo de ${peorHora} concentra el mayor número de detractores con ${maxDetractores} registros.`,
 
         `- Durante las ${peorHora} se presenta incremento de detractores, con un total de ${maxDetractores}.`
 
