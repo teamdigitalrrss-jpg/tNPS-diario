@@ -2555,18 +2555,35 @@ Object.entries(porHora).forEach(([hora, d]) => {
 
     });
 
-    // ✅ PRIORIDAD: si hay supervisores sin encuestas, ellos son el menor volumen
-    if (sinEncuestas.length > 0) {
-        menorSupervisor = sinEncuestas[0];
-        menorCantidad = 0;
-    }
-
     // ✅ texto adaptado (sin 0 interacciones)
  
 let cantidadTexto = menorCantidad === 0
     ? "(0)"
     : `(${menorCantidad})`;
 
+// ✅ PRIORIDAD 1: si hay supervisores SIN encuestas
+if (sinEncuestas.length > 0) {
+
+    let lista = sinEncuestas.length === 1
+        ? sinEncuestas[0]
+        : sinEncuestas.slice(0, -1).join(", ") + " y " + sinEncuestas.slice(-1);
+
+    let opcionesCero = [
+
+        `Durante el día, no se registran encuestas para: ${lista} al corte de las ${ultimaHora}.`,
+
+        `Se identifica ausencia de encuestas para ${lista} al corte de las ${ultimaHora}.`,
+
+        `No se presentan registros de encuestas para ${lista} durante la jornada al corte de las ${ultimaHora}.`,
+
+        `Se observa que ${lista} no registra encuestas hasta las ${ultimaHora}.`
+
+    ];
+
+    let textoFinal = opcionesCero[Math.floor(Math.random() * opcionesCero.length)];
+
+    return textoFinal + "\n";
+}
 
     let opcionesInsight = [];
 
@@ -2608,11 +2625,6 @@ if (menorSupervisor) {
     const insightFinal = opcionesInsight[Math.floor(Math.random() * opcionesInsight.length)];
 
     texto += insightFinal + "\n";
-
-    // ✅ SOLO agregar esta línea si hay más de 1 sin encuestas
-    if (sinEncuestas.length > 1) {
-        texto += `Adicionalmente, no se registran encuestas para: ${sinEncuestas.slice(1).join(", ")}.\n`;
-    }
 
     return texto;
 }
