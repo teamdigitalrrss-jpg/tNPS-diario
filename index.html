@@ -946,6 +946,13 @@ style="width:100%; padding:8px; font-size:14px;">
 </button>
 
 
+<button onclick="limpiarFiltroDashboard()" class="btn-azul">
+    🔄 Reset Filtros
+</button>
+
+
+
+
 
     <div class="contenedor-tabla">
         <table id="tablaTME">
@@ -953,6 +960,7 @@ style="width:100%; padding:8px; font-size:14px;">
                 <tr>
                     <th>Hora</th>
                     <th>Hora Interacción</th>
+                    <th>Usuario OM</th>
                     <th>Operador</th>
                     <th>Tiempo Espera</th>
                     <th>Supervisor</th>
@@ -980,7 +988,7 @@ style="width:100%; padding:8px; font-size:14px;">
 <div style="display:flex; gap:40px; margin-top:20px;">
 
     <div class="card-grafico">
-        <div class="titulo-card">Top Asesores TME</div>
+        <div class="titulo-card">Top Asesores TME (Promedio)</div>
         <canvas id="graficoTMEAsesor"></canvas>
     </div>
 
@@ -1003,6 +1011,16 @@ style="width:100%; padding:8px; font-size:14px;">
     let datosOriginales = [];
     let metricasGlobales = {};
     let mapaLicencias = {};
+    
+let filtroDashboard = {
+    hora: null,
+    site: null,
+    supervisor: null,
+    asesor: null // ✅ NUEVO
+};
+
+
+    
 
 supervisoresSeleccionadosTME = [];
 sitesSeleccionadosTME = [];
@@ -3352,11 +3370,13 @@ function convertirTiempoExcel(valor) {
 
     if (typeof valor === "number") {
 
-        let totalSegundos = Math.round(valor * 86400);
+        let seg = valor * 86400; // SIN Math.round
 
-        let h = Math.floor(totalSegundos / 3600);
-        let m = Math.floor((totalSegundos % 3600) / 60);
-        let s = totalSegundos % 60;
+
+let h = Math.floor(seg / 3600);
+let m = Math.floor((seg % 3600) / 60);
+let s = Math.floor(seg % 60);
+
 
         return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
     }
@@ -3377,10 +3397,25 @@ function generarTablaTME() {
         let hora = convertirHoraExcel(row["Hora"]);
         let horaInteraccion = convertirHoraCompleta(row["Hora"]);
         let operador = row["Operador Abre"] || "";
+        
+let usuarioOM =
+    row["Id Usuario"] ||
+    row["Id usuario"] ||
+    row["ID Usuario"] ||
+    "";
 
-        let espera = convertirTiempoExcel(
-            row["Tiempo en cola espera"] || row["Tiempo en cola"]
-        );
+
+        
+let esperaRaw = row["Tiempo en cola espera"] || row["Tiempo en cola"];
+
+// ✅ valor REAL igual Excel
+let esperaSeg = typeof esperaRaw === "number"
+    ? esperaRaw * 86400
+    : tiempoASegundos(esperaRaw);
+
+// ✅ solo para mostrar
+let espera = formatearMinutos(esperaSeg);
+
 
         if (!operador) return;
 
@@ -3400,14 +3435,18 @@ function generarTablaTME() {
         // ✅ FILTRO CORRECTO
         if (!site || site.trim() === "") return;
 
-        filas.push({
-            hora,
-            horaInteraccion,
-            operador,
-            espera,
-            supervisor,
-            site
-        });
+        
+filas.push({
+    hora,
+    horaInteraccion,
+    usuarioOM,
+    operador,
+    espera,     // 👀 solo visual
+    esperaSeg,  // 🔥 ESTE ES EL REAL
+    supervisor,
+    site
+});
+
 
     });
 
@@ -3439,6 +3478,7 @@ if (sitesSeleccionadosTME.length > 0) {
         tr.innerHTML = `
             <td>${r.hora}</td>
             <td>${r.horaInteraccion}</td>
+            <td>${r.usuarioOM || ""}</td>
             <td>${r.operador}</td>
             <td>${r.espera}</td>
             <td>${r.supervisor}</td>
@@ -3574,13 +3614,16 @@ function llenarFiltroSiteTME(filas) {
 }
 
 function generarGraficoTMEHora(filas) {
+    filas = obtenerFilasFiltradas(filas);
+
 
     let data = {};
 
     filas.forEach(f => {
-        if (!f.hora || !f.espera) return;
 
-        let seg = tiempoASegundos(f.espera);
+        if (!f.hora || !f.esperaSeg) return;
+
+        let seg = f.esperaSeg;
 
         if (!data[f.hora]) {
             data[f.hora] = { total: 0, suma: 0 };
@@ -3613,35 +3656,52 @@ function generarGraficoTMEHora(filas) {
                 pointRadius: 5
             }]
         },
-
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            onClick: (evt, elements, chart) => {
 
-            
-plugins: {
-        legend: {
-            display: false
-        }
-    },
+    if (!elements.length) return;
+
+    const index = elements[0].index;
+
+    const horaSeleccionada = chart.data.labels[index];
+
+    filtroDashboard.hora = horaSeleccionada;
+
+    generarTablaTME(); // 🔄 vuelve a dibujar todo
+},
 
 
             layout: {
-                padding: { bottom: 10 }
+padding: { 
+        top: 30,      // ✅ ESTE ES EL FIX
+        bottom: 40,
+        right: 50 // 🔥 ESTE ES EL FIX
+    }},
+
+
+            plugins: {
+                legend: { display: false }
             },
 
             scales: {
                 x: {
-                    ticks: { padding: 5 }
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45,
+                        autoSkip: false,
+                        padding: 10
+                    }
                 },
                 y: {
                     beginAtZero: true
                 }
             }
+            
         },
 
         plugins: [{
-            id: 'valores',
             afterDatasetsDraw(chart) {
 
                 const { ctx } = chart;
@@ -3654,22 +3714,11 @@ plugins: {
                         let valor = dataset.data[index];
                         if (!valor) return;
 
-                        valor = Math.round(valor);
-
-                        ctx.save();
-                        ctx.font = "12px Arial";
-                        ctx.fillStyle = "#000";
-                        ctx.textAlign = "center";
-
-                        
-ctx.fillText(
-    formatearMinutos(valor),
-    point.x,
-    point.y - 8
-);
-
-
-                        ctx.restore();
+                        ctx.fillText(
+                            formatearMinutos(valor),
+                            point.x,
+                            point.y - 8
+                        );
                     });
                 });
             }
@@ -3692,13 +3741,16 @@ function formatearMinutos(segundos) {
 
 
 function generarGraficoTMESite(filas) {
+    filas = obtenerFilasFiltradas(filas);
+
 
     let data = {};
 
     filas.forEach(f => {
-        if (!f.site || !f.espera) return;
 
-        let seg = tiempoASegundos(f.espera);
+        if (!f.site || !f.esperaSeg) return;
+
+        let seg = f.esperaSeg;
 
         if (!data[f.site]) {
             data[f.site] = { total: 0, suma: 0 };
@@ -3708,12 +3760,16 @@ function generarGraficoTMESite(filas) {
         data[f.site].suma += seg;
     });
 
-    const labels = Object.keys(data);
+    let lista = Object.entries(data).map(([site, d]) => ({
+        site,
+        promedio: d.suma / d.total
+    }));
 
-    const valores = labels.map(s => {
-        let d = data[s];
-        return d.suma / d.total;
-    });
+    // ✅ orden descendente
+    lista.sort((a, b) => b.promedio - a.promedio);
+
+    const labels = lista.map(x => x.site);
+    const valores = lista.map(x => x.promedio);
 
     const ctx = document.getElementById("graficoTMESite");
 
@@ -3724,30 +3780,41 @@ function generarGraficoTMESite(filas) {
         data: {
             labels,
             datasets: [{
+                label: "TME",
                 data: valores,
                 backgroundColor: '#0396a6'
             }]
         },
-
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            onClick: (evt, elements, chart) => {
 
-            
-plugins: {
-        legend: {
-            display: false
-        }
-    },
+    if (!elements.length) return;
 
+    const index = elements[0].index;
+    const site = chart.data.labels[index];
+
+    filtroDashboard.site = site;
+
+    generarTablaTME();
+},
 
             layout: {
-                padding: { bottom: 10 }
+                padding: { bottom: 40 }
+            },
+
+            plugins: {
+                legend: { display: false }
             },
 
             scales: {
                 x: {
-                    ticks: { padding: 5 }
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45,
+                        autoSkip: false
+                    }
                 },
                 y: {
                     beginAtZero: true
@@ -3755,34 +3822,36 @@ plugins: {
             }
         },
 
+        // ✅ 🔥 TEXTO CENTRADO (IGUAL QUE SUPERVISOR)
         plugins: [{
-            id: 'valoresBarras',
             afterDatasetsDraw(chart) {
 
-                const { ctx } = chart;
+                const ctx = chart.ctx;
 
                 chart.data.datasets.forEach((dataset, i) => {
+
                     const meta = chart.getDatasetMeta(i);
 
                     meta.data.forEach((bar, index) => {
 
-                        let valor = dataset.data[index];
+                        const props = bar.getProps(['x','y','base'], true);
+
+                        const valor = dataset.data[index];
                         if (!valor) return;
 
-                        valor = Math.round(valor);
+                        const centroY = props.y + (props.base - props.y) / 2;
 
                         ctx.save();
-                        ctx.font = "12px Arial";
-                        ctx.fillStyle = "#000";
+                        ctx.font = "bold 13px Arial";
+                        ctx.fillStyle = "#000"; // ✅ visible seguro
                         ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
 
-                        
-ctx.fillText(
-    formatearMinutos(valor),
-    bar.x,
-    bar.y - 8
-);
-
+                        ctx.fillText(
+                            formatearMinutos(valor),
+                            props.x,
+                            centroY
+                        );
 
                         ctx.restore();
                     });
@@ -3790,16 +3859,19 @@ ctx.fillText(
             }
         }]
     });
-}
+}   
 
 function generarGraficoTMEAsesor(filas) {
+    filas = obtenerFilasFiltradas(filas);
+
 
     let data = {};
 
     filas.forEach(f => {
-        if (!f.operador || !f.espera) return;
 
-        let seg = tiempoASegundos(f.espera);
+        if (!f.operador || !f.esperaSeg) return;
+
+        let seg = f.esperaSeg;
 
         if (!data[f.operador]) {
             data[f.operador] = { total: 0, suma: 0 };
@@ -3815,7 +3887,7 @@ function generarGraficoTMEAsesor(filas) {
     }));
 
     lista.sort((a, b) => b.promedio - a.promedio);
-    lista = lista.slice(0, 10);
+    lista = lista.slice(0, 25);
 
     const labels = lista.map(x => x.asesor);
     const valores = lista.map(x => x.promedio);
@@ -3829,6 +3901,7 @@ function generarGraficoTMEAsesor(filas) {
         data: {
             labels,
             datasets: [{
+                label: "TME",
                 data: valores,
                 borderColor: '#0396a6',
                 backgroundColor: '#0396a6',
@@ -3839,36 +3912,47 @@ function generarGraficoTMEAsesor(filas) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            onClick: (evt, elements, chart) => {
 
-            
-plugins: {
-        legend: {
-            display: false
-        }
-    },
+    if (!elements.length) return;
+
+    const index = elements[0].index;
+    
+const asesorSeleccionado = chart.data.labels[index];
+
+filtroDashboard.asesor = asesorSeleccionado;
+
+
+    generarTablaTME(); // 🔄 refresca TODO
+},
 
             layout: {
-                padding: { bottom: 50 }
-            },
+padding: { 
+        bottom: 40,
+        right: 50 // 🔥 ESTE ES EL FIX
+    }},
+
             scales: {
                 x: {
                     ticks: {
                         maxRotation: 45,
                         minRotation: 45,
-                        autoSkip: false,
-                        padding: 10
+                        autoSkip: false
                     }
                 }
             }
         },
+
         plugins: [{
             afterDatasetsDraw(chart) {
+
                 const { ctx } = chart;
 
                 chart.data.datasets.forEach((dataset, i) => {
                     const meta = chart.getDatasetMeta(i);
 
                     meta.data.forEach((point, index) => {
+
                         let valor = dataset.data[index];
                         if (!valor) return;
 
@@ -3884,14 +3968,19 @@ plugins: {
     });
 }
 
+
+
 function generarGraficoTMESupervisor(filas) {
+    filas = obtenerFilasFiltradas(filas);
+
 
     let data = {};
 
     filas.forEach(f => {
-        if (!f.supervisor || !f.espera) return;
 
-        let seg = tiempoASegundos(f.espera);
+        if (!f.supervisor || !f.esperaSeg) return;
+
+        let seg = f.esperaSeg;
 
         if (!data[f.supervisor]) {
             data[f.supervisor] = { total: 0, suma: 0 };
@@ -3906,7 +3995,8 @@ function generarGraficoTMESupervisor(filas) {
         promedio: d.suma / d.total
     }));
 
-    lista.sort((a, b) => a.promedio - b.promedio);
+    // ✅ orden descendente
+    lista.sort((a, b) => b.promedio - a.promedio);
 
     const labels = lista.map(x => x.supervisor);
     const valores = lista.map(x => x.promedio);
@@ -3920,6 +4010,7 @@ function generarGraficoTMESupervisor(filas) {
         data: {
             labels,
             datasets: [{
+                label: "TME",
                 data: valores,
                 backgroundColor: '#0396a6'
             }]
@@ -3927,52 +4018,80 @@ function generarGraficoTMESupervisor(filas) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            onClick: (evt, elements, chart) => {
 
-            
-plugins: {
-        legend: {
-            display: false
-        }
-    },
+    if (!elements.length) return;
+
+    const index = elements[0].index;
+    const supervisor = chart.data.labels[index];
+
+    filtroDashboard.supervisor = supervisor;
+
+    generarTablaTME();
+},
 
             layout: {
-                padding: { bottom: 50 }
+                padding: { bottom: 40 }
             },
+
+            plugins: {
+                legend: { display: false }
+            },
+
             scales: {
                 x: {
                     ticks: {
                         maxRotation: 45,
                         minRotation: 45,
-                        autoSkip: false,
-                        padding: 10
+                        autoSkip: false
                     }
+                },
+                y: {
+                    beginAtZero: true
                 }
             }
         },
+
+        // ✅ 🔥 TEXTO CENTRADO CORRECTO
         plugins: [{
             afterDatasetsDraw(chart) {
 
-                const { ctx } = chart;
+                const ctx = chart.ctx;
 
                 chart.data.datasets.forEach((dataset, i) => {
+
                     const meta = chart.getDatasetMeta(i);
 
                     meta.data.forEach((bar, index) => {
 
-                        let valor = dataset.data[index];
+                        const props = bar.getProps(['x','y','base'], true);
+
+                        const valor = dataset.data[index];
                         if (!valor) return;
+
+                        // ✅ centro vertical REAL
+                        const centroY = props.y + (props.base - props.y) / 2;
+
+                        ctx.save();
+                        ctx.font = "bold 13px Arial";
+                        ctx.fillStyle = "#000"; // ✅ visible siempre
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
 
                         ctx.fillText(
                             formatearMinutos(valor),
-                            bar.x,
-                            bar.y - 8
+                            props.x,
+                            centroY
                         );
+
+                        ctx.restore();
                     });
                 });
             }
         }]
     });
-}   
+}
+ 
 
 
 document.getElementById("btnGuardarTabla3")
@@ -4020,6 +4139,36 @@ document.getElementById("btnExportarTME").addEventListener("click", function () 
     XLSX.writeFile(wb, "TME.xlsx");
 
 });
+
+function obtenerFilasFiltradas(filas) {
+    
+
+    return filas.filter(f => {
+
+        if (filtroDashboard.hora && f.hora !== filtroDashboard.hora) return false;
+
+        if (filtroDashboard.site && f.site !== filtroDashboard.site) return false;
+
+        if (filtroDashboard.supervisor && f.supervisor !== filtroDashboard.supervisor) return false;
+
+        if (filtroDashboard.asesor && f.operador !== filtroDashboard.asesor) return false;
+
+        return true;
+    });
+}
+
+function limpiarFiltroDashboard() {
+
+    filtroDashboard = {
+        hora: null,
+        site: null,
+        supervisor: null,
+        asesor: null // ✅ IMPORTANTE
+    };
+
+    generarTablaTME();
+}
+
     </script>
 
     </body>
