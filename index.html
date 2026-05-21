@@ -166,22 +166,22 @@
 
     /* header */
 
-    #pizarraHeader {
-        display: flex;
-        align-items: center;
-        justify-content: center; /* 👈 centra */
-        position: relative; /* 👈 permite mover el ojo */
-        background: transparent;
-        color: rgb(255, 255, 255);
-        padding: 25px 10px;
+#pizarraHeader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: transparent;
+    color: rgb(255, 255, 255);
+    padding: 25px 10px;
+}
 
+#btnCopiar {
+    cursor: pointer;
+    font-size: 30px;
+    color: #0396a6;
+}
 
-        /* botón ojo */
-            #btnCopiar {
-                cursor: pointer;
-            font-size: 30px;
-            color: #0396a6;  /* 👈 cambia el color del ícono */
-    }}
 
     #btnCopiar:hover {
         opacity: 0.6;
@@ -659,9 +659,38 @@
     opacity: 0.7;
 }
 
+.card-grafico {
+    width: 45%;
+    height: 400px;
+
+    background: #f1f1f1;
+    border-radius: 10px;
+    padding: 15px;
+
+    border: 2px solid rgba(0,0,0,0.15);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+}
+
+.titulo-card {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #0396a6;
+}
+
+body.modo-tme > *:not(#vistaTME) {
+    display: none !important;
+}
+
+body.modo-tip > *:not(#vistaTipificaciones) {
+    display: none !important;
+}
+
+
     </style>
 
     <body>
+
     
     <div id="modalLicencias" class="modal">
         
@@ -671,12 +700,14 @@
             <h3>Licencias</h3>
 
     <div class="contenedor-tabla tabla1-container">
-        <table id="tabla">
-                <table id="tablaLicencias">
-                    <thead></thead>
-                    <tbody></tbody>
-                </table>
-        </table>
+        
+<div class="contenedor-tabla tabla1-container">
+    <table id="tablaLicencias">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
+</div>
+
     </div>
 
         </div>
@@ -746,6 +777,8 @@
 <span id="nombreArchivo"></span>
 <button id="btnLicencias" class="btn-licencias">Licencias</button>
 <button id="btnTNPS" class="btn-licencias">tNPS Asesores</button>
+<button id="btnTipificaciones" class="btn-azul">📋 Tipificaciones</button>
+<button id="btnTME" class="btn-azul">📊 TME</button>
 
 <button id="btnGenerarMensaje" class="btn-azul">
     ✉️ Generar mensaje
@@ -853,12 +886,130 @@ style="width:100%; padding:8px; font-size:14px;">
 </div>
 </div>
 
+<div id="vistaTipificaciones" style="display:none; margin-top:20px;">
+
+    <h3>Tabla Tipificaciones</h3>
+
+    <button id="btnVolver" class="btn-licencias">⬅ Volver</button>
+
+    <div class="contenedor-tabla">
+        <table id="tablaTipificaciones">
+            <thead>
+                <tr>
+                    <th>Cierre</th>
+                    <th>Operador de cierre</th>
+                    <th>Categoría</th>
+                    <th>Id Usuario</th>
+                    <th>Nota</th>
+                    <th>Supervisor</th>
+                    <th>Site</th>
+                    <th>Comentario</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</div>
+
+
+<div id="vistaTME" style="display:none; margin-top:20px;">
+
+    <h3>Tabla TME</h3>
+    <div style="display:flex; gap:40px; align-items:flex-start; margin-bottom:10px;">
+
+    <!-- ✅ SUPERVISOR -->
+    <div>
+        <label><b>Filtrar Supervisor:</b></label>
+        <div id="filtroSupervisorTME"
+            style="border:1px solid #ccc; padding:10px; width:300px; height:120px; overflow-y:auto;">
+        </div>
+    </div>
+
+    <!-- ✅ SITE -->
+    <div>
+        <label><b>Filtrar Site:</b></label>
+        <div id="filtroSiteTME"
+            style="border:1px solid #ccc; padding:10px; width:300px; height:120px; overflow-y:auto;">
+        </div>
+    </div>
+
+</div>
+
+    
+<button id="btnVolverTME" class="btn-licencias" style="margin-bottom:15px;">
+    ⬅ Volver
+</button>
+
+<button id="btnExportarTME" class="btn-azul">
+    ⬇️ Exportar
+</button>
+
+
+
+    <div class="contenedor-tabla">
+        <table id="tablaTME">
+            <thead>
+                <tr>
+                    <th>Hora</th>
+                    <th>Hora Interacción</th>
+                    <th>Operador</th>
+                    <th>Tiempo Espera</th>
+                    <th>Supervisor</th>
+                    <th>Site</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div style="display:flex; gap:40px; margin-top:20px;">
+
+    <div class="card-grafico">
+        <div class="titulo-card">Promedio por Hora</div>
+        <canvas id="graficoTMEHora"></canvas>
+    </div>
+
+    <div class="card-grafico">
+        <div class="titulo-card">Promedio por Site</div>
+        <canvas id="graficoTMESite"></canvas>
+    </div>
+    
+</div>
+
+<div style="display:flex; gap:40px; margin-top:20px;">
+
+    <div class="card-grafico">
+        <div class="titulo-card">Top Asesores TME</div>
+        <canvas id="graficoTMEAsesor"></canvas>
+    </div>
+
+    <div class="card-grafico">
+        <div class="titulo-card">Promedio por Supervisor</div>
+        <canvas id="graficoTMESupervisor"></canvas>
+    </div>
+
+</div>
+
+
+</div>
+
+
 
     <script>
+    let sitesSeleccionadosTME = [];
     let supervisoresSeleccionados = [];
     let datosGlobales = [];
+    let datosOriginales = [];
     let metricasGlobales = {};
     let mapaLicencias = {};
+
+supervisoresSeleccionadosTME = [];
+sitesSeleccionadosTME = [];
+
+document.getElementById("filtroSupervisorTME").innerHTML = "";
+document.getElementById("filtroSiteTME").innerHTML = "";
+
     let licenciasCargadas = false;
     const COLOR_VERDE = "#008000";
     const COLOR_ROJO = "#ee2323";
@@ -890,6 +1041,7 @@ style="width:100%; padding:8px; font-size:14px;">
 function procesarDatos(data) {
 
     datosGlobales = [];
+    datosOriginales = data;
 
     data.forEach(row => {
 
@@ -962,18 +1114,24 @@ function procesarDatos(data) {
                 site = mapaLicencias[operadorKey].site;
             }
 
-            datosGlobales.push({
-                hora: hora, // ✅ NUEVO
-                operador: operador || "",
-                skill: row["Skill"] || "",
-                canal: canal,
-                nota: nota,
-                tipo: tipo,
-                encuesta: encuesta,
-                supervisor: supervisor,
-                site: site,
-                fecha: row["Fecha"] || row["Fecha/Hora"] || row["timestamp"] || null
-            });
+            
+datosGlobales.push({
+    hora: hora,
+    operador: operador || "",
+    categoria: row["Categoría"] || "",
+    idUsuario: row["Id Usuario"] || "",
+    comentario: row["Comentario"] || "",
+    skill: row["Skill"] || "",
+    canal: canal,
+    nota: nota,
+    tipo: tipo,
+    encuesta: encuesta,
+    supervisor: supervisor,
+    site: site,
+    totalMensajes: parseInt(row["Tot.Mensajes Cliente"]) || 0,
+    fecha: row["Fecha"] || row["Fecha/Hora"] || row["timestamp"] || null
+});
+
         }
     }
 });
@@ -1053,6 +1211,47 @@ function procesarDatos(data) {
         modal.style.display = "block";
         cargarLicencias();
     };
+
+    
+
+document.getElementById("btnTipificaciones").onclick = () => {
+
+    document.body.classList.add("modo-tip");
+
+    document.getElementById("vistaTipificaciones").style.display = "block";
+
+    generarTablaTipificaciones();
+};
+
+
+document.getElementById("btnTME").onclick = () => {
+
+    document.body.classList.add("modo-tme");
+
+    document.getElementById("vistaTME").style.display = "block";
+
+    generarTablaTME();
+};
+
+
+
+
+document.getElementById("btnVolver").onclick = () => {
+
+    document.body.classList.remove("modo-tip");
+
+    document.getElementById("vistaTipificaciones").style.display = "none";
+};
+
+document.getElementById("btnVolverTME").onclick = () => {
+
+    document.body.classList.remove("modo-tme");
+
+    document.getElementById("vistaTME").style.display = "none";
+};
+
+
+
 
     btnTNPS.onclick = () => {
         modalTNPS.style.display = "block";
@@ -1738,26 +1937,21 @@ if (peorTramo) {
     return insights;
 }
 
+
+
 function generarGraficoLinea() {
 
-    const data = obtenerDatosGraficoLinea(); // ✅ CLAVE
+    const data = obtenerDatosGraficoLinea();
 
-    console.log("DATA GRAFICO FINAL:", data); // ✅ DEBUG
+    let labels = ["10:00", "14:00", "21:00"];
+    labels = labels.filter(h => data[h] && data[h].total > 0);
 
-    
-let labels = ["10:00", "14:00", "21:00"];
-
-// ✅ FILTRAR SOLO LOS QUE TIENEN DATOS
-labels = labels.filter(h => data[h] && data[h].total > 0);
-
-const detractores = labels.map(h => data[h]?.detractores || 0);
-const promotores = labels.map(h => data[h]?.promotores || 0);
-const tnps = labels.map(h => data[h]?.tnps || 0);
-
-
+    const detractores = labels.map(h => data[h]?.detractores || 0);
+    const promotores = labels.map(h => data[h]?.promotores || 0);
+    const tnps = labels.map(h => data[h]?.tnps || 0);
 
     const canvas = document.getElementById("graficoLinea");
-    
+
     if (window.miGraficoLinea) {
         window.miGraficoLinea.destroy();
     }
@@ -1793,57 +1987,54 @@ const tnps = labels.map(h => data[h]?.tnps || 0);
                 }
             ]
         },
-
-options: {
-    responsive: true,
-    maintainAspectRatio: false,
-
-    scales: {
-        x: {
-            offset: true,   // ✅ 👈 ESTA ES LA LÍNEA MÁS IMPORTANTE
-            ticks: {
-                padding: 10  // ✅ separa un poco las etiquetas
-            }
-        }
-    }
-},
-
-// ✅ PLUGIN PARA MOSTRAR VALORES
-plugins: [{
-    id: 'valoresPuntos',
-    afterDatasetsDraw(chart) {
-
-        const { ctx } = chart;
-
-        chart.data.datasets.forEach((dataset, i) => {
-            const meta = chart.getDatasetMeta(i);
-
-            meta.data.forEach((point, index) => {
-
-                let valor = dataset.data[index];
-
-                if (valor === 0) return;
-
-                ctx.save();
-
-                ctx.font = "17px Arial";
-                ctx.fillStyle = "#000";
-                ctx.textAlign = "center";
-
-                // ✅ FORMATO tnps con 2 decimales
-                if (dataset.label === "tNPS HOY") {
-                    valor = valor.toFixed(2);
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: { bottom: 20 }
+            },
+            scales: {
+                x: {
+                    offset: true,
+                    ticks: { padding: 10 }
+                },
+                y: {
+                    beginAtZero: true
                 }
+            }
+        },
+        plugins: [{
+            id: 'valoresPuntos',
+            afterDatasetsDraw(chart) {
 
-                ctx.fillText(valor, point.x, point.y - 8);
+                const { ctx } = chart;
 
-                ctx.restore();
-            });
-        });
-    }
-}]
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+
+                    meta.data.forEach((point, index) => {
+
+                        let valor = dataset.data[index];
+                        if (valor === 0) return;
+
+                        ctx.save();
+                        ctx.font = "17px Arial";
+                        ctx.fillStyle = "#000";
+                        ctx.textAlign = "center";
+
+                        if (dataset.label === "tNPS HOY") {
+                            valor = valor.toFixed(2);
+                        }
+
+                        ctx.fillText(valor, point.x, point.y - 8);
+                        ctx.restore();
+                    });
+                });
+            }
+        }]
     });
 }
+
 
 function obtenerResumenGeneral() {
 
@@ -2040,15 +2231,12 @@ function obtenerEncuestasPorHora() {
 }
 
 
-
 function generarGraficoEncuestasHora() {
 
     const data = obtenerEncuestasPorHora();
 
-    
-const labels = Object.keys(data).filter(h => data[h] > 0);
-const valores = labels.map(h => data[h]);
-
+    const labels = Object.keys(data).filter(h => data[h] > 0);
+    const valores = labels.map(h => data[h]);
 
     const canvas = document.getElementById("graficoEncuestasHora");
 
@@ -2066,20 +2254,20 @@ const valores = labels.map(h => data[h]);
                 borderColor: '#0396a6',
                 backgroundColor: '#0396a6',
                 tension: 0.4,
-                pointRadius: 5,
-                pointBackgroundColor: '#0396a6'
+                pointRadius: 5
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-
+            layout: {
+                padding: { bottom: 20 }
+            },
             plugins: {
                 legend: {
                     labels: { color: "#333" }
                 }
             },
-
             scales: {
                 x: {
                     ticks: { color: "#333" }
@@ -2090,8 +2278,6 @@ const valores = labels.map(h => data[h]);
                 }
             }
         },
-
-        // ✅ mostrar valor en cada punto
         plugins: [{
             id: 'puntosTexto',
             afterDatasetsDraw(chart) {
@@ -2668,7 +2854,6 @@ const opcionesFinales = [
 const textoFinal = opcionesFinales[Math.floor(Math.random() * opcionesFinales.length)];
 
 mensaje += "\n" + textoFinal;
-``
 
 
         textarea.value = mensaje;
@@ -3078,12 +3263,763 @@ html2canvas(elemento, {
 
 });
 
+
+function generarTablaTipificaciones() {
+
+    const tbody = document.querySelector("#tablaTipificaciones tbody");
+    tbody.innerHTML = "";
+
+    let filtrados = datosOriginales.filter(row => {
+
+        let categoria = String(row["Categoría"] || "").toLowerCase();
+
+        let notaRaw = row["ans1"];
+        let nota = parseInt(notaRaw);
+
+        let totalMensajes = parseInt(row["Tot.Mensajes Cliente"]) || 0;
+
+        return (
+            (categoria.includes("spam") || categoria.includes("dinamica")) &&
+            !isNaN(nota) &&
+            totalMensajes >= 5
+        );
+    });
+
+    filtrados.forEach(r => {
+
+        let operador = r["Operador Cierre"] || "";
+
+        const operadorKey = operador.toLowerCase().replace(/\s+/g, "");
+
+        let supervisor = "";
+        let site = "";
+
+        if (mapaLicencias[operadorKey]) {
+            supervisor = mapaLicencias[operadorKey].supervisor;
+            site = mapaLicencias[operadorKey].site;
+        }
+
+        // ✅ AQUÍ ESTÁ EL FIX REAL
+        let notaRaw = r["ans1"];
+        let nota = parseInt(notaRaw);
+
+        if (isNaN(nota)) nota = ""; // evita basura
+
+        
+let idUsuario =
+    r["Id usuario"] ||   // ✅ ESTE ES EL CORRECTO SEGÚN TU EXCEL
+    r["Id Usuario"] ||
+    r["ID Usuario"] ||
+    "";
+
+
+        let tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${operador}</td>
+            <td>${r["Categoría"] || ""}</td>
+            <td>${idUsuario}</td>
+            <td>${nota}</td>
+            <td>${supervisor}</td>
+            <td>${site}</td>
+            <td>${r["Comentario"] || ""}</td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+
+    console.log("✅ Tipificaciones OK:", filtrados.length);
+}
+
+function convertirHoraExcel(valor) {
+
+    if (!valor && valor !== 0) return "";
+
+    if (typeof valor === "number") {
+        let totalHoras = valor * 24;
+        let h = Math.floor(totalHoras);
+        return h.toString().padStart(2, "0") + ":00";
+    }
+
+    if (typeof valor === "string") return valor;
+
+    return "";
+}
+
+function convertirTiempoExcel(valor) {
+
+    if (!valor && valor !== 0) return "";
+
+    if (typeof valor === "number") {
+
+        let totalSegundos = Math.round(valor * 86400);
+
+        let h = Math.floor(totalSegundos / 3600);
+        let m = Math.floor((totalSegundos % 3600) / 60);
+        let s = totalSegundos % 60;
+
+        return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
+    }
+
+    return valor;
+}
+
+
+function generarTablaTME() {
+
+    const tbody = document.querySelector("#tablaTME tbody");
+    tbody.innerHTML = "";
+
+    let filas = [];
+
+    datosOriginales.forEach(row => {
+
+        let hora = convertirHoraExcel(row["Hora"]);
+        let horaInteraccion = convertirHoraCompleta(row["Hora"]);
+        let operador = row["Operador Abre"] || "";
+
+        let espera = convertirTiempoExcel(
+            row["Tiempo en cola espera"] || row["Tiempo en cola"]
+        );
+
+        if (!operador) return;
+
+        const operadorKey = operador
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, "");
+
+        let supervisor = "";
+        let site = "";
+
+        if (mapaLicencias[operadorKey]) {
+            supervisor = mapaLicencias[operadorKey].supervisor;
+            site = mapaLicencias[operadorKey].site;
+        }
+
+        // ✅ FILTRO CORRECTO
+        if (!site || site.trim() === "") return;
+
+        filas.push({
+            hora,
+            horaInteraccion,
+            operador,
+            espera,
+            supervisor,
+            site
+        });
+
+    });
+
+    // ✅ filtro supervisor
+    if (supervisoresSeleccionadosTME.length > 0) {
+        filas = filas.filter(f => 
+            supervisoresSeleccionadosTME.includes(f.supervisor)
+        );
+    }
+
+    
+// ✅ ✅ 🔥 NUEVO FILTRO SITE
+if (sitesSeleccionadosTME.length > 0) {
+    filas = filas.filter(f => 
+        sitesSeleccionadosTME.includes(f.site)
+    );
+}
+
+
+    // ✅ ordenar
+    filas.sort((a, b) => 
+        tiempoASegundos(b.espera) - tiempoASegundos(a.espera)
+    );
+
+    // ✅ pintar tabla
+    filas.forEach(r => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${r.hora}</td>
+            <td>${r.horaInteraccion}</td>
+            <td>${r.operador}</td>
+            <td>${r.espera}</td>
+            <td>${r.supervisor}</td>
+            <td>${r.site}</td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+
+    // ✅ llenar filtro
+    llenarFiltroSupervisorTME(filas);
+    llenarFiltroSiteTME(filas);
+    generarGraficoTMEHora(filas);
+generarGraficoTMESite(filas);
+
+generarGraficoTMEAsesor(filas);
+generarGraficoTMESupervisor(filas);
+
+}
+
+
+
+
+function convertirHoraCompleta(valor) {
+
+    if (!valor && valor !== 0) return "";
+
+    // ✅ si viene como número Excel
+    if (typeof valor === "number") {
+
+        let totalSegundos = Math.round(valor * 86400);
+
+        let h = Math.floor(totalSegundos / 3600);
+        let m = Math.floor((totalSegundos % 3600) / 60);
+        let s = totalSegundos % 60;
+
+        return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
+    }
+
+    // ✅ si ya viene tipo "08:15:32"
+    if (typeof valor === "string") return valor;
+
+    return "";
+}
+
+function llenarFiltroSupervisorTME(filas) {
+
+    const contenedor = document.getElementById("filtroSupervisorTME");
+
+    // ✅ 🔥 SI YA EXISTE, NO LO VUELVE A CREAR
+    if (contenedor.childElementCount > 0) return;
+
+    const supervisores = [...new Set(
+        filas
+            .map(r => r.supervisor)
+            .filter(s => s && s.trim() !== "")
+    )].sort();
+
+    supervisores.forEach(sup => {
+
+        const label = document.createElement("label");
+        label.style.display = "block";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = sup;
+
+        checkbox.addEventListener("change", () => {
+
+            supervisoresSeleccionadosTME = Array.from(
+                contenedor.querySelectorAll("input:checked")
+            ).map(cb => cb.value);
+
+            generarTablaTME();
+        });
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(" " + sup));
+
+        contenedor.appendChild(label);
+    });
+}
+
+
+
+function tiempoASegundos(tiempo) {
+
+    if (!tiempo) return 0;
+
+    let partes = tiempo.split(":");
+
+    let h = parseInt(partes[0]) || 0;
+    let m = parseInt(partes[1]) || 0;
+    let s = parseInt(partes[2]) || 0;
+
+    return h * 3600 + m * 60 + s;
+}
+
+function llenarFiltroSiteTME(filas) {
+
+    const contenedor = document.getElementById("filtroSiteTME");
+
+    // ✅ no regenerar
+    if (contenedor.childElementCount > 0) return;
+
+    const sites = [...new Set(
+        filas.map(r => r.site).filter(s => s && s.trim() !== "")
+    )].sort();
+
+    sites.forEach(site => {
+
+        const label = document.createElement("label");
+        label.style.display = "block";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = site;
+
+        checkbox.addEventListener("change", () => {
+
+            sitesSeleccionadosTME = Array.from(
+                contenedor.querySelectorAll("input:checked")
+            ).map(cb => cb.value);
+
+            generarTablaTME();
+        });
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(" " + site));
+
+        contenedor.appendChild(label);
+    });
+}
+
+function generarGraficoTMEHora(filas) {
+
+    let data = {};
+
+    filas.forEach(f => {
+        if (!f.hora || !f.espera) return;
+
+        let seg = tiempoASegundos(f.espera);
+
+        if (!data[f.hora]) {
+            data[f.hora] = { total: 0, suma: 0 };
+        }
+
+        data[f.hora].total++;
+        data[f.hora].suma += seg;
+    });
+
+    const labels = Object.keys(data).sort();
+
+    const valores = labels.map(h => {
+        let d = data[h];
+        return d.suma / d.total;
+    });
+
+    const ctx = document.getElementById("graficoTMEHora");
+
+    if (window.chartHora) window.chartHora.destroy();
+
+    window.chartHora = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                data: valores,
+                borderColor: '#0396a6',
+                backgroundColor: '#0396a6',
+                tension: 0.4,
+                pointRadius: 5
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            
+plugins: {
+        legend: {
+            display: false
+        }
+    },
+
+
+            layout: {
+                padding: { bottom: 10 }
+            },
+
+            scales: {
+                x: {
+                    ticks: { padding: 5 }
+                },
+                y: {
+                    beginAtZero: true
+                }
+            }
+        },
+
+        plugins: [{
+            id: 'valores',
+            afterDatasetsDraw(chart) {
+
+                const { ctx } = chart;
+
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+
+                    meta.data.forEach((point, index) => {
+
+                        let valor = dataset.data[index];
+                        if (!valor) return;
+
+                        valor = Math.round(valor);
+
+                        ctx.save();
+                        ctx.font = "12px Arial";
+                        ctx.fillStyle = "#000";
+                        ctx.textAlign = "center";
+
+                        
+ctx.fillText(
+    formatearMinutos(valor),
+    point.x,
+    point.y - 8
+);
+
+
+                        ctx.restore();
+                    });
+                });
+            }
+        }]
+    });
+}
+
+        
+function formatearMinutos(segundos) {
+
+    if (!segundos || isNaN(segundos)) return "0:00";
+
+    let total = Math.round(segundos);
+
+    let min = Math.floor(total / 60);
+    let seg = total % 60;
+
+    return `${min}:${seg.toString().padStart(2, "0")}`;
+}
+
+
+function generarGraficoTMESite(filas) {
+
+    let data = {};
+
+    filas.forEach(f => {
+        if (!f.site || !f.espera) return;
+
+        let seg = tiempoASegundos(f.espera);
+
+        if (!data[f.site]) {
+            data[f.site] = { total: 0, suma: 0 };
+        }
+
+        data[f.site].total++;
+        data[f.site].suma += seg;
+    });
+
+    const labels = Object.keys(data);
+
+    const valores = labels.map(s => {
+        let d = data[s];
+        return d.suma / d.total;
+    });
+
+    const ctx = document.getElementById("graficoTMESite");
+
+    if (window.chartSite) window.chartSite.destroy();
+
+    window.chartSite = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                data: valores,
+                backgroundColor: '#0396a6'
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            
+plugins: {
+        legend: {
+            display: false
+        }
+    },
+
+
+            layout: {
+                padding: { bottom: 10 }
+            },
+
+            scales: {
+                x: {
+                    ticks: { padding: 5 }
+                },
+                y: {
+                    beginAtZero: true
+                }
+            }
+        },
+
+        plugins: [{
+            id: 'valoresBarras',
+            afterDatasetsDraw(chart) {
+
+                const { ctx } = chart;
+
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+
+                    meta.data.forEach((bar, index) => {
+
+                        let valor = dataset.data[index];
+                        if (!valor) return;
+
+                        valor = Math.round(valor);
+
+                        ctx.save();
+                        ctx.font = "12px Arial";
+                        ctx.fillStyle = "#000";
+                        ctx.textAlign = "center";
+
+                        
+ctx.fillText(
+    formatearMinutos(valor),
+    bar.x,
+    bar.y - 8
+);
+
+
+                        ctx.restore();
+                    });
+                });
+            }
+        }]
+    });
+}
+
+function generarGraficoTMEAsesor(filas) {
+
+    let data = {};
+
+    filas.forEach(f => {
+        if (!f.operador || !f.espera) return;
+
+        let seg = tiempoASegundos(f.espera);
+
+        if (!data[f.operador]) {
+            data[f.operador] = { total: 0, suma: 0 };
+        }
+
+        data[f.operador].total++;
+        data[f.operador].suma += seg;
+    });
+
+    let lista = Object.entries(data).map(([asesor, d]) => ({
+        asesor,
+        promedio: d.suma / d.total
+    }));
+
+    lista.sort((a, b) => b.promedio - a.promedio);
+    lista = lista.slice(0, 10);
+
+    const labels = lista.map(x => x.asesor);
+    const valores = lista.map(x => x.promedio);
+
+    const ctx = document.getElementById("graficoTMEAsesor");
+
+    if (window.chartAsesor) window.chartAsesor.destroy();
+
+    window.chartAsesor = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                data: valores,
+                borderColor: '#0396a6',
+                backgroundColor: '#0396a6',
+                tension: 0.4,
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            
+plugins: {
+        legend: {
+            display: false
+        }
+    },
+
+            layout: {
+                padding: { bottom: 50 }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45,
+                        autoSkip: false,
+                        padding: 10
+                    }
+                }
+            }
+        },
+        plugins: [{
+            afterDatasetsDraw(chart) {
+                const { ctx } = chart;
+
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+
+                    meta.data.forEach((point, index) => {
+                        let valor = dataset.data[index];
+                        if (!valor) return;
+
+                        ctx.fillText(
+                            formatearMinutos(valor),
+                            point.x,
+                            point.y - 8
+                        );
+                    });
+                });
+            }
+        }]
+    });
+}
+
+function generarGraficoTMESupervisor(filas) {
+
+    let data = {};
+
+    filas.forEach(f => {
+        if (!f.supervisor || !f.espera) return;
+
+        let seg = tiempoASegundos(f.espera);
+
+        if (!data[f.supervisor]) {
+            data[f.supervisor] = { total: 0, suma: 0 };
+        }
+
+        data[f.supervisor].total++;
+        data[f.supervisor].suma += seg;
+    });
+
+    let lista = Object.entries(data).map(([sup, d]) => ({
+        supervisor: sup,
+        promedio: d.suma / d.total
+    }));
+
+    lista.sort((a, b) => a.promedio - b.promedio);
+
+    const labels = lista.map(x => x.supervisor);
+    const valores = lista.map(x => x.promedio);
+
+    const ctx = document.getElementById("graficoTMESupervisor");
+
+    if (window.chartSupervisor) window.chartSupervisor.destroy();
+
+    window.chartSupervisor = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                data: valores,
+                backgroundColor: '#0396a6'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            
+plugins: {
+        legend: {
+            display: false
+        }
+    },
+
+            layout: {
+                padding: { bottom: 50 }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45,
+                        autoSkip: false,
+                        padding: 10
+                    }
+                }
+            }
+        },
+        plugins: [{
+            afterDatasetsDraw(chart) {
+
+                const { ctx } = chart;
+
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+
+                    meta.data.forEach((bar, index) => {
+
+                        let valor = dataset.data[index];
+                        if (!valor) return;
+
+                        ctx.fillText(
+                            formatearMinutos(valor),
+                            bar.x,
+                            bar.y - 8
+                        );
+                    });
+                });
+            }
+        }]
+    });
+}   
+
+
 document.getElementById("btnGuardarTabla3")
     .addEventListener("click", guardarTabla3);
 
+ 
+document.getElementById("btnExportarTME").addEventListener("click", function () {
 
-    
+    const tabla = document.getElementById("tablaTME");
 
+    if (!tabla) {
+        alert("Tabla no encontrada ❌");
+        return;
+    }
+
+    let data = [];
+
+    // ✅ encabezados
+    const headers = Array.from(tabla.querySelectorAll("thead th"))
+        .map(th => th.innerText);
+
+    data.push(headers);
+
+    // ✅ filas
+    const filas = tabla.querySelectorAll("tbody tr");
+
+    filas.forEach(tr => {
+        const fila = Array.from(tr.querySelectorAll("td"))
+            .map(td => td.innerText);
+
+        data.push(fila);
+    });
+
+    // ✅ crear hoja (MUCHO más rápido)
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // ✅ auto ancho de columnas (ligero)
+    ws['!cols'] = headers.map(() => ({ wch: 20 }));
+
+    // ✅ workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "TME");
+
+    // ✅ descarga rápida
+    XLSX.writeFile(wb, "TME.xlsx");
+
+});
     </script>
 
     </body>
