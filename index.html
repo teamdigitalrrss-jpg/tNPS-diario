@@ -686,6 +686,20 @@ body.modo-tip > *:not(#vistaTipificaciones) {
     display: none !important;
 }
 
+#graficoHoraContainer {
+    width: 1500px;
+    height: 350px;
+
+    margin: 30px 0 30px 40px; /* mismo alineado de pizarra */
+
+    background: #f1f1f1;
+
+    border-radius: 10px;
+    padding: 15px;
+
+    border: 2px solid rgba(0,0,0,0.15);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+}
 
     </style>
 
@@ -866,11 +880,21 @@ body.modo-tip > *:not(#vistaTipificaciones) {
 
 </div>
 </div>
-
+    
 </div>
+
+
+<!-- ✅ AQUÍ VA EXACTAMENTE -->
+<div id="graficoHoraContainer">
+    <div class="titulo-card">tNPS y Encuestas por Hora</div>
+    <canvas id="graficoTNPSHora"></canvas>
+</div>
+
 
 <div id="modalPassword" class="modal">
 <div class="modal-contenido modal-pequeno">
+
+
 
 <h3>🔐 Acceso restringido</h3>
 
@@ -1175,6 +1199,7 @@ datosGlobales.push({
     generarGraficoLinea();
     generarCardsResumen();
     generarGraficoEncuestasHora();
+    generarGraficoTNPSHora(); // ✅ NUEVO
 });
 
 }
@@ -1818,32 +1843,31 @@ function obtenerDatosGraficoLinea() {
         let h = parseInt(r.hora);
         if (isNaN(h)) return;
 
-        // ✅ RANGO 1
-        if (h >= 0 && h < 10) {
 
-            if (r.tipo === "Promotor") resultado["10:00"].promotores++;
-            if (r.tipo === "Detractor") resultado["10:00"].detractores++;
+// ✅ RANGO 1 → 00:00 - 09:59
+if (h >= 0 && h < 10) {
 
-            resultado["10:00"].total++;
-        }
+    if (r.tipo === "Promotor") resultado["10:00"].promotores++;
+    if (r.tipo === "Detractor") resultado["10:00"].detractores++;
+    resultado["10:00"].total++;
+}
 
-        // ✅ RANGO 2
-        else if (h >= 10 && h < 14) {
+// ✅ RANGO 2 → 10:00 - 13:59
+else if (h >= 10 && h < 14) {
 
-            if (r.tipo === "Promotor") resultado["14:00"].promotores++;
-            if (r.tipo === "Detractor") resultado["14:00"].detractores++;
+    if (r.tipo === "Promotor") resultado["14:00"].promotores++;
+    if (r.tipo === "Detractor") resultado["14:00"].detractores++;
+    resultado["14:00"].total++;
+}
 
-            resultado["14:00"].total++;
-        }
+// ✅ RANGO 3 → 14:00 - 21:59
+else if (h >= 14 && h <= 21) {
 
-        // ✅ RANGO 3
-        else if (h >= 14 && h < 21) {
+    if (r.tipo === "Promotor") resultado["21:00"].promotores++;
+    if (r.tipo === "Detractor") resultado["21:00"].detractores++;
+    resultado["21:00"].total++;
+}
 
-            if (r.tipo === "Promotor") resultado["21:00"].promotores++;
-            if (r.tipo === "Detractor") resultado["21:00"].detractores++;
-
-            resultado["21:00"].total++;
-        }
 
     });
 
@@ -4167,6 +4191,147 @@ function limpiarFiltroDashboard() {
     };
 
     generarTablaTME();
+}
+
+function obtenerTNPSyEncuestasPorHora() {
+
+    let resultado = {};
+
+    // ✅ crear 00 a 23
+    for (let i = 0; i < 24; i++) {
+        let key = i.toString().padStart(2, "0") + ":00";
+
+        resultado[key] = {
+            promotores: 0,
+            detractores: 0,
+            total: 0,
+            tnps: 0
+        };
+    }
+
+    datosGlobales.forEach(r => {
+
+        if (!r.hora) return;
+
+        let h = parseInt(r.hora);
+        if (isNaN(h)) return;
+
+        let key = h.toString().padStart(2, "0") + ":00";
+
+        if (!resultado[key]) return;
+
+        if (r.tipo === "Promotor") resultado[key].promotores++;
+        else if (r.tipo === "Detractor") resultado[key].detractores++;
+
+        resultado[key].total++;
+    });
+
+    // ✅ calcular tnps
+    Object.keys(resultado).forEach(h => {
+
+        let d = resultado[h];
+
+        if (d.total > 0) {
+            d.tnps = ((d.promotores - d.detractores) / d.total) * 100;
+        } else {
+            d.tnps = 0;
+        }
+    });
+
+    return resultado;
+}
+
+function generarGraficoTNPSHora() {
+
+    const data = obtenerTNPSyEncuestasPorHora();
+
+    const labels = Object.keys(data).filter(h => data[h].total > 0);
+
+    const tnps = labels.map(h => data[h].tnps);
+    const encuestas = labels.map(h => data[h].total);
+
+    const canvas = document.getElementById("graficoTNPSHora");
+
+    if (window.chartTNPSHora) {
+        window.chartTNPSHora.destroy();
+    }
+
+    window.chartTNPSHora = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'tNPS',
+                    data: tnps,
+                    borderColor: '#0396a6',
+                    backgroundColor: '#0396a6',
+                    tension: 0.4,
+                    pointRadius: 5,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Encuestas',
+                    data: encuestas,
+                    borderColor: '#ff9800',
+                    backgroundColor: '#ff9800',
+                    tension: 0.4,
+                    pointRadius: 5,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: { bottom: 20 }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    position: 'left'
+                },
+                y1: {
+                    beginAtZero: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        },
+        plugins: [{
+            afterDatasetsDraw(chart) {
+
+                const { ctx } = chart;
+
+                chart.data.datasets.forEach((dataset, i) => {
+
+                    const meta = chart.getDatasetMeta(i);
+
+                    meta.data.forEach((point, index) => {
+
+                        let valor = dataset.data[index];
+                        if (valor === 0) return;
+
+                        ctx.save();
+                        ctx.font = "14px Arial";
+                        ctx.fillStyle = "#000";
+                        ctx.textAlign = "center";
+
+                        if (dataset.label === "tNPS") {
+                            valor = valor.toFixed(1);
+                        }
+
+                        ctx.fillText(valor, point.x, point.y - 8);
+
+                        ctx.restore();
+                    });
+                });
+            }
+        }]
+    });
 }
 
     </script>
