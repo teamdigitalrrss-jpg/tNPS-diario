@@ -866,11 +866,17 @@ body.modo-tip > *:not(#vistaTipificaciones) {
 </span>
 </div>
 
+
+
+
+
 <div id="pizarraContenido">
 <div id="cardsSupervisores"></div>
 <div id="cardsAcumulados"></div>
 <div id="cardsTNPS"></div>
 </div>
+
+
 
 <div id="graficoLineaContainer">
 <canvas id="graficoLinea"></canvas>
@@ -879,15 +885,13 @@ body.modo-tip > *:not(#vistaTipificaciones) {
 <div id="cardsResumen"></div>
 
 </div>
+    <!-- ✅ AHORA el gráfico queda debajo de la pizarra -->
+    <div id="graficoHoraContainer">
+        <div class="titulo-card">tNPS y Encuestas por Hora</div>
+        <canvas id="graficoTNPSHora"></canvas>
+    </div>
 </div>
     
-</div>
-
-
-<!-- ✅ AQUÍ VA EXACTAMENTE -->
-<div id="graficoHoraContainer">
-    <div class="titulo-card">tNPS y Encuestas por Hora</div>
-    <canvas id="graficoTNPSHora"></canvas>
 </div>
 
 
@@ -3430,7 +3434,7 @@ let usuarioOM =
 
 
         
-let esperaRaw = row["Tiempo en cola espera"] || row["Tiempo en cola"];
+let esperaRaw = row["Tiempo 1ra Respuesta"];
 
 // ✅ valor REAL igual Excel
 let esperaSeg = typeof esperaRaw === "number"
@@ -3649,12 +3653,19 @@ function generarGraficoTMEHora(filas) {
 
         let seg = f.esperaSeg;
 
-        if (!data[f.hora]) {
-            data[f.hora] = { total: 0, suma: 0 };
-        }
+        
+if (!data[f.hora]) {
+    data[f.hora] = { total: 0, suma: 0, max: 0 };
+}
 
-        data[f.hora].total++;
-        data[f.hora].suma += seg;
+data[f.hora].total++;
+data[f.hora].suma += seg;
+
+// ✅ calcular máximo
+if (seg > data[f.hora].max) {
+    data[f.hora].max = seg;
+}
+
     });
 
     const labels = Object.keys(data).sort();
@@ -3664,6 +3675,8 @@ function generarGraficoTMEHora(filas) {
         return d.suma / d.total;
     });
 
+    const valoresMax = labels.map(h => data[h].max);
+
     const ctx = document.getElementById("graficoTMEHora");
 
     if (window.chartHora) window.chartHora.destroy();
@@ -3672,13 +3685,26 @@ function generarGraficoTMEHora(filas) {
         type: 'line',
         data: {
             labels,
-            datasets: [{
-                data: valores,
-                borderColor: '#0396a6',
-                backgroundColor: '#0396a6',
-                tension: 0.4,
-                pointRadius: 5
-            }]
+            
+datasets: [
+{
+    label: "Promedio",
+    data: valores,
+    borderColor: '#0396a6',
+    backgroundColor: '#0396a6',
+    tension: 0.4,
+    pointRadius: 5
+},
+{
+    label: "Máximo",
+    data: valoresMax,
+    borderColor: '#ff9800',
+    backgroundColor: '#ff9800',
+    tension: 0.4,
+    pointRadius: 5
+}
+]
+
         },
         options: {
             responsive: true,
@@ -3705,9 +3731,13 @@ padding: {
     }},
 
 
-            plugins: {
-                legend: { display: false }
-            },
+            
+plugins: {
+    legend: {
+        display: true
+    }
+},
+
 
             scales: {
                 x: {
