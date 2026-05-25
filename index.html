@@ -300,10 +300,14 @@
         margin-top: -5px;
     }
 
-    .card-acumulado-tnps {
-        font-size: 20px;
-        font-weight: bold;
-    }
+   
+.card-acumulado-tnps {
+    font-size: 28px;     /* 🔥 MÁS GRANDE */
+    font-weight: bold;
+
+    margin-top: 6px;     /* 👇 BAJA EL NÚMERO */
+}
+
 
 
 
@@ -1593,53 +1597,39 @@ Object.entries(resultado)
     }
 
 
-    function generarCardsAcumulados() {
+function generarCardsAcumulados() {
 
-        const contenedor = document.getElementById("cardsAcumulados");
-        contenedor.innerHTML = "";
+    const contenedor = document.getElementById("cardsAcumulados");
+    contenedor.innerHTML = "";
 
-        const filas = document.querySelectorAll("#tabla3 tbody tr");
+    const supervisores = [
+        "Erika Martinez",
+        "Jaime Flores",
+        "Erick Morales",
+        "Rodrigo Gomez",
+        "Gerardo Leiva"
+    ];
 
-        const orden = [
-            "Erika",
-            "Jaime",
-            "Erick",
-            "Rodrigo",
-            "Gerardo"
-        ];
+    supervisores.forEach(nombre => {
 
-        orden.forEach(nombre => {
+        // ✅ contar encuestas reales por supervisor
+        let totalEncuestas = datosGlobales.filter(r =>
+            r.supervisor === nombre
+        ).length;
 
-            let valor = 0;
+        let card = document.createElement("div");
+        card.className = "card-acumulado";
 
-            filas.forEach(fila => {
+        card.innerHTML = `
+            <div class="card-acumulado-nombre">Encuestas</div>
+            <div class="card-acumulado-tnps">
+                ${totalEncuestas}
+            </div>
+        `;
 
-                let texto = fila.cells[0]?.textContent.toLowerCase() || "";
-
-                if (texto.includes(nombre.toLowerCase())) {
-
-                    let dato = fila.cells[1]?.textContent || "0"; // ✅ COLUMNA CORRECTA
-                    valor = parseFloat(dato) || 0;
-                }
-
-            });
-
-            let color = valor >= 75 ? "#008000" : "#ee2323";
-
-            let card = document.createElement("div");
-            card.className = "card-acumulado";
-
-            card.innerHTML = `
-                <div class="card-acumulado-nombre">Acumulado</div>
-                <div class="card-acumulado-tnps" style="color:${color}">
-                    ${valor.toFixed(2)}
-                </div>
-            `;
-
-            contenedor.appendChild(card);
-        });
-
-    }
+        contenedor.appendChild(card);
+    });
+}
 
 
 
@@ -2553,15 +2543,13 @@ if (tnpsDia < 75) {
         } else if (tnpsDia >= 75) {
             estado = "Resultado en control.";
         } else {
-            estado = "Resultado por debajo de meta.";
+            estado = "*Resultado por debajo de meta.*";
         }
 
         let mensaje = `${saludo}\n\n`;
 
         mensaje += `🔔 Actualización tNPS\n\n`;
         mensaje += `${estado}\n\n`;
-
-        mensaje += `tNPS del día: ${tnpsDia.toFixed(2)}% | Acumulado del mes: ${tnpsMes.toFixed(2)}%\n\n`;
 
         // ✅ calcular porcentaje de detractores
 let porcentajeDetractores = 0;
@@ -3129,41 +3117,49 @@ function obtenerTextoPeorHora() {
 
     const porHora = metricasGlobales.porHora || {};
 
-    let peorHora = null;
-    let maxDetractores = 0;
 
-    
+let peorHora = null;
+let peorRatio = -1;
+let detractoresPeor = 0;
+
 Object.entries(porHora).forEach(([hora, d]) => {
 
     let h = parseInt(hora.split(":")[0]);
 
-    // ❌ IGNORAR 00:00 - 07:59
+    // ✅ mantienes tu regla
     if (h < 8) return;
 
-    if (d.detractores > maxDetractores) {
-        maxDetractores = d.detractores;
+    if (!d || d.total === 0) return;
+
+    let ratio = d.detractores / d.total;
+
+    // ✅ elegir la peor por impacto real
+    if (ratio > peorRatio) {
+        peorRatio = ratio;
         peorHora = hora;
+        detractoresPeor = d.detractores;
     }
 });
 
 
-    if (!peorHora) return "";
 
-    // ✅ opciones dinámicas
-    const opciones = [
+if (!peorHora) return "";
 
-        `- La mayor concentración de detractores se registra a las ${peorHora} con un total de ${maxDetractores} casos.`,
+const porcentaje = (peorRatio * 100).toFixed(1);
 
-        `- Se identifica las ${peorHora} como el horario con mayor incidencia de detractores, alcanzando ${maxDetractores} casos.`,
+const opciones = [
 
-        `- En el periodo de ${peorHora} concentra el mayor número de detractores con ${maxDetractores} registros.`,
+    `- Durante las ${peorHora} se registra el mayor impacto de detractores, representando ${porcentaje}% de las encuestas en ese periodo.`,
 
-        `- Durante las ${peorHora} se presenta incremento de detractores, con un total de ${maxDetractores}.`
+    `- El tramo de las ${peorHora} presenta la mayor afectación, con un ${porcentaje}% de detractores sobre el total de encuestas.`,
 
-    ];
+    `- Se identifica el periodo de ${peorHora} como el más crítico, con un ${porcentaje}% de incidencia de detractores.`,
 
-    // ✅ elegir uno aleatorio
-    return opciones[Math.floor(Math.random() * opciones.length)] + "\n";
+    `- En la hora ${peorHora} se concentra el mayor impacto negativo, con ${porcentaje}% de detractores.`
+
+];
+
+return opciones[Math.floor(Math.random() * opciones.length)] + "\n";
 }
 
 function generarCardFecha() {
