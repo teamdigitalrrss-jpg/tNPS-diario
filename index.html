@@ -1028,6 +1028,17 @@ style="width:100%; padding:8px; font-size:14px;">
 
 
     <script>
+
+        function safeListener(id, evento, callback) {
+    const el = document.getElementById(id);
+
+    if (el) {
+        el.addEventListener(evento, callback);
+    } else {
+        console.warn("⚠️ No existe:", id);
+    }
+}
+
     let sitesSeleccionadosTME = [];
     let supervisoresSeleccionados = [];
     let datosGlobales = [];
@@ -1622,8 +1633,7 @@ function generarCardsAcumulados() {
     const sitios = ["Santa Elena", "Santa Ana"];
 
     const tnpsDia = calcularTNPSGlobal();
-    const tnpsMes = obtenerTNPSMes();
-
+    
     const cardsAdicionales = [
         { nombre: "tNPS Día", valor: tnpsDia },
         { nombre: "Prom. encuestas por hora", valor: calcularPromedioEncuestasHora() }
@@ -1765,31 +1775,6 @@ function calcularTNPSGlobal() {
 
 
 
-    function obtenerTNPSMes() {
-
-        const filas = document.querySelectorAll("#tabla3 tbody tr");
-
-        for (let fila of filas) {
-
-            let texto = fila.cells[0]?.textContent || "";
-            texto = texto.toLowerCase().trim();
-
-            // ✅ detectar cualquier variación
-            if (
-                texto.includes("tnps acumulado") ||
-                texto.includes("tnps") && texto.includes("acumulado")
-            ) {
-                
-            let raw = fila.cells[1]?.textContent || "0";
-                raw = raw.replace("%", "").trim();
-
-            return parseFloat(raw) || 0;
-
-            }
-        }
-
-        return 0;
-    }
 
 function obtenerDatosGraficoLinea() {
 
@@ -2119,9 +2104,14 @@ document.getElementById("btnArchivo").addEventListener("click", function() {
     document.getElementById("fileInput").click();
 });
 
-document.getElementById("cerrarNota").addEventListener("click", function() {
-    document.getElementById("notaMovible").style.display = "none";
-});
+
+const cerrarNota = document.getElementById("cerrarNota");
+
+if (cerrarNota) {
+    cerrarNota.addEventListener("click", function() {
+        document.getElementById("notaMovible").style.display = "none";
+    });
+};
 
 const nota = document.getElementById("notaMovible");
 const header = document.getElementById("notaHeader");
@@ -2129,12 +2119,26 @@ const header = document.getElementById("notaHeader");
 let offsetX = 0, offsetY = 0;
 let isDragging = false;
 
-header.onmousedown = function(e) {
-    isDragging = true;
+if (nota && header) {
 
-    offsetX = e.clientX - nota.offsetLeft;
-    offsetY = e.clientY - nota.offsetTop;
-};
+    header.onmousedown = function(e) {
+        isDragging = true;
+        offsetX = e.clientX - nota.offsetLeft;
+        offsetY = e.clientY - nota.offsetTop;
+    };
+
+    document.onmousemove = function(e) {
+        if (isDragging) {
+            nota.style.left = (e.clientX - offsetX) + "px";
+            nota.style.top = (e.clientY - offsetY) + "px";
+            nota.style.transform = "none";
+        }
+    };
+
+    document.onmouseup = function() {
+        isDragging = false;
+    };
+}
 
 document.onmousemove = function(e) {
     if (isDragging) {
@@ -2419,10 +2423,15 @@ document.getElementById("btnCopiarMini").addEventListener("click", function () {
 
 function generarMensajeDinamico() {
 
+    
+if (!metricasGlobales || !metricasGlobales.porHora) {
+    calcularMetricasGlobales();
+}
+
+
     try {
 
         const tnpsDia = calcularTNPSGlobal();
-        const tnpsMes = obtenerTNPSMes();
         const resumen = obtenerResumenGeneral();
 
         const porHora = metricasGlobales.porHora || {};
@@ -2830,43 +2839,59 @@ document.getElementById("btnGenerarMensaje").addEventListener("click", function 
     const textarea = document.getElementById("textoMensaje");
     const loading = document.getElementById("loadingMensaje");
 
-    // mostrar modal
+    // ✅ VALIDACIÓN (EVITA QUE NO HAGA NADA)
+    if (!datosGlobales || datosGlobales.length === 0) {
+        alert("Primero carga el archivo ❌");
+        return;
+    }
+
+    // ✅ abrir modal
     modal.style.display = "block";
 
-    // limpiar texto
+    // ✅ limpiar texto
     textarea.value = "";
 
-    // mostrar loading
+    // ✅ mostrar loading
     loading.style.display = "block";
 
     setTimeout(() => {
 
-        
-let mensaje = generarMensajeDinamico();
+        let mensaje = "";
 
-// ✅ 🔥 ESTA ES LA LÍNEA QUE TE FALTABA
-mensaje += "\n\n" + generarInsightAdicional();
-// ✅ textos finales dinámicos
-const opcionesFinales = [
+        try {
+            // ✅ FIX PRINCIPAL (TE FALTABA)
+            calcularMetricasGlobales();
 
-    "Adicional, compartimos el detalle de resultados actuales por asesor 👇",
+            mensaje = generarMensajeDinamico();
 
-    "A continuación, se presenta el comportamiento actual por asesor 👇",
+        } catch (e) {
+            console.error("FALLÓ MENSAJE:", e);
+            mensaje = "❌ Error generando mensaje";
+        }
 
-    "Compartimos a continuación el desglose actualizado de desempeño por asesor 👇",
+        // ✅ INSIGHT ADICIONAL
+        try {
+            mensaje += "\n\n" + generarInsightAdicional();
+        } catch (e) {
+            console.error("FALLÓ INSIGHT:", e);
+        }
 
-    "Se adjunta el detalle de resultados actuales gestionados por asesor 👇"
+        // ✅ TEXTO FINAL DINÁMICO
+        const opcionesFinales = [
+            "Adicional, compartimos el detalle de resultados actuales por asesor 👇",
+            "A continuación, se presenta el comportamiento actual por asesor 👇",
+            "Compartimos a continuación el desglose actualizado de desempeño por asesor 👇",
+            "Se adjunta el detalle de resultados actuales gestionados por asesor 👇"
+        ];
 
-];
+        const textoFinal = opcionesFinales[Math.floor(Math.random() * opcionesFinales.length)];
 
-// ✅ elegir uno aleatorio
-const textoFinal = opcionesFinales[Math.floor(Math.random() * opcionesFinales.length)];
+        mensaje += "\n" + textoFinal;
 
-mensaje += "\n" + textoFinal;
-
-
+        // ✅ mostrar mensaje
         textarea.value = mensaje;
 
+        // ✅ quitar loading
         loading.style.display = "none";
 
     }, 100);
@@ -2975,49 +3000,36 @@ function obtenerTextoPeorHora() {
 
     const porHora = metricasGlobales.porHora || {};
 
+    let peorHora = null;
+    let peorRatio = -1;
 
-let peorHora = null;
-let peorRatio = -1;
-let detractoresPeor = 0;
+    Object.entries(porHora).forEach(([hora, d]) => {
 
-Object.entries(porHora).forEach(([hora, d]) => {
+        if (!d || d.total === 0) return;
 
-    let h = parseInt(hora.split(":")[0]);
+        let h = parseInt(hora.split(":")[0]);
 
-    // ✅ mantienes tu regla
-    if (h < 8) return;
+        if (h < 8) return;
 
-    if (!d || d.total === 0) return;
+        let ratio = d.total > 0 ? d.detractores / d.total : 0;
 
-    let ratio = d.detractores / d.total;
+        if (ratio > peorRatio) {
+            peorRatio = ratio;
+            peorHora = hora;
+        }
+    });
 
-    // ✅ elegir la peor por impacto real
-    if (ratio > peorRatio) {
-        peorRatio = ratio;
-        peorHora = hora;
-        detractoresPeor = d.detractores;
-    }
-});
+    if (!peorHora) return "";
 
-
-
-if (!peorHora) return "";
-
-const porcentaje = (peorRatio * 100).toFixed(1);
+    const cantidadDetractores = porHora[peorHora]?.detractores || 0;
 
 const opciones = [
-
-    `- Durante las ${peorHora} se registra el mayor impacto de detractores, representando ${porcentaje}% de las encuestas en ese periodo.`,
-
-    `- El tramo de las ${peorHora} presenta la mayor afectación, con un ${porcentaje}% de detractores sobre el total de encuestas.`,
-
-    `- Se identifica el periodo de ${peorHora} como el más crítico, con un ${porcentaje}% de incidencia de detractores.`,
-
-    `- En la hora ${peorHora} se concentra el mayor impacto negativo, con ${porcentaje}% de detractores.`
-
+    `- Durante las ${peorHora} se registra el mayor impacto de detractores (${cantidadDetractores} detractores).`,
+    `- El tramo ${peorHora} presenta mayor afectación (${cantidadDetractores} detractores).`,
+    `- La hora ${peorHora} es la más crítica con ${cantidadDetractores} detractores.`
 ];
 
-return opciones[Math.floor(Math.random() * opciones.length)] + "\n";
+    return opciones[Math.floor(Math.random() * opciones.length)] + "\n";
 }
 
 function generarCardFecha() {
