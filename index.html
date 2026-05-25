@@ -705,6 +705,22 @@ body.modo-tip > *:not(#vistaTipificaciones) {
     box-shadow: 0 6px 15px rgba(0,0,0,0.25);
 }
 
+
+/* ✅ centrar título SOLO esta card */
+.titulo-centro {
+    text-align: center;
+    width: 100%;
+}
+
+/* ✅ número grande */
+.card-tnps-valor {
+    font-size: 40px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 10px;
+}
+
+
     </style>
 
     <body>
@@ -769,24 +785,6 @@ body.modo-tip > *:not(#vistaTipificaciones) {
     </div>
 </div>
 
-<div id="notaMovible">
-
-    <div id="notaHeader">
-        🔎 Nota importante 
-        <span id="cerrarNota">✖</span>
-    </div>
-
-    <div id="notaContenido">
-        🔎 Antes de cargar archivo, asegurate de 👇<br><br>
-        - Descargar reporte de atenciones<br>
-        - Abrir el archivo<br>
-        - Insertar tabla<br>
-        - Guardar como extensión .xlsx<br><br>
-        Ahora ya podrás cargar el archivo en este sitio 😎
-    </div>
-
-</div>
-
 
 <h2 id="tituloPrincipal">📊 tNPS del día</h2>
 
@@ -839,13 +837,6 @@ body.modo-tip > *:not(#vistaTipificaciones) {
 
 <button id="btnActualizarTabla3" class="btn-licencias" style="margin-bottom:5px;">🔄</button>
 <button id="btnGuardarTabla3" class="btn-licencias" style="margin-bottom:5px;">💾</button>
-
-<div class="contenedor-tabla">
-<table id="tabla3">
-<thead></thead>
-<tbody></tbody>
-</table>
-</div>
 
 <div id="miniPizarraMeta">
 <div id="headerMiniPizarra">
@@ -1194,7 +1185,6 @@ datosGlobales.push({
     llenarFiltroSupervisor();
     renderTabla();
     actualizarTitulo();
-    cargarTabla3();
     generarCardsSupervisores();
     generarCardsAcumulados();
     generarCardsTNPS();
@@ -1350,37 +1340,6 @@ document.getElementById("btnVolverTME").onclick = () => {
             else tbody.appendChild(tr);
         });
     }
-
-function cargarTabla3() {
-
-    fetch(URL_BIN, {
-        headers: {
-            "X-Master-Key": API_KEY
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-
-        console.log("DATA REAL:", data);
-
-        let json = data.record?.record || data.record || [];
-
-        if (!Array.isArray(json)) {
-            json = [];
-        }
-
-        renderTabla3(json);
-
-        generarCardsAcumulados();
-        generarCardsTNPS();
-
-    })
-    .catch(err => {
-        console.error("Error JSONBin:", err);
-        renderTabla3([]);
-    });
-}
-
 
 
     function llenarFiltroSupervisor() {
@@ -1667,7 +1626,7 @@ function generarCardsAcumulados() {
 
     const cardsAdicionales = [
         { nombre: "tNPS Día", valor: tnpsDia },
-        { nombre: "tNPS Mes", valor: tnpsMes }
+        { nombre: "Prom. encuestas por hora", valor: calcularPromedioEncuestasHora() }
     ];
 
 
@@ -1697,11 +1656,26 @@ setTimeout(() => {
         });
         cardsAdicionales.forEach(item => {
 
-        let card = document.createElement("div");
-        card.className = "card-tnps-site";
+    let card = document.createElement("div");
+    card.className = "card-tnps-site";
 
-        const idCanvas = "chart-" + item.nombre.replace(/\s/g, "");
+    const idCanvas = "chart-" + item.nombre.replace(/\s/g, "");
 
+    // ✅ SOLO MODIFICAR ESTA CARD
+    if (item.nombre === "Prom. encuestas por hora") {
+
+        card.innerHTML = `
+            <div class="card-tnps-titulo titulo-centro">${item.nombre}</div>
+            <div class="card-tnps-valor">
+                ${Math.round(item.valor)}
+            </div>
+        `;
+
+        contenedor.appendChild(card);
+
+    } else {
+
+        // ✅ LAS DEMÁS NO SE TOCAN
         card.innerHTML = `
             <div class="card-tnps-titulo">${item.nombre}</div>
             <canvas id="${idCanvas}" width="160" height="80"></canvas>
@@ -1712,7 +1686,8 @@ setTimeout(() => {
         setTimeout(() => {
             dibujarGauge(idCanvas, item.valor);
         }, 50);
-    });
+    }
+});
     }
 
     function dibujarGauge(canvasId, valor){
@@ -1753,7 +1728,7 @@ setTimeout(() => {
                     ctx.textAlign = "center";
 
                     ctx.fillText(
-                        porcentaje.toFixed(2) + " %",
+                        Math.round(porcentaje) + " %",
                         chart.width / 2,
                         chart.height / 1.4
                     );
@@ -2962,123 +2937,6 @@ function cargarLicencias(callback = null) {
 }
 
 
-function renderTabla3(json) {
-
-    
-    const thead = document.querySelector("#tabla3 thead");
-    const tbody = document.querySelector("#tabla3 tbody");
-
-    // ✅ 🔴 PROTECCIÓN TOTAL
-    if (!thead || !tbody) return;
-
-    thead.innerHTML = "";
-    tbody.innerHTML = "";
-
-    if (!json || json.length === 0) {
-
-        // ✅ ✅ MOSTRAR encabezados SIEMPRE
-        let trHead = document.createElement("tr");
-        ["Comentario", "Dato"].forEach(txt => {
-            let th = document.createElement("th");
-            th.textContent = txt;
-            trHead.appendChild(th);
-        });
-        thead.appendChild(trHead);
-
-        tbody.innerHTML = "<tr><td colspan='2'>⚠️ Sin datos para mostrar</td></tr>";
-
-        return;
-    }
-
-
-    let trHead = document.createElement("tr");
-
-    ["Comentario", "Dato"].forEach(txt => {
-        let th = document.createElement("th");
-        th.textContent = txt;
-        trHead.appendChild(th);
-    });
-
-    thead.appendChild(trHead);
-
-    json.forEach(row => {
-
-        let tr = document.createElement("tr");
-
-        let tdComentario = document.createElement("td");
-        tdComentario.textContent = row.comentario || "";
-
-        let tdDato = document.createElement("td");
-
-// ✅ permite editar
-tdDato.contentEditable = true;
-tdDato.textContent = row.dato ?? "";
-
-// ✅ validar números en tiempo real
-tdDato.addEventListener("input", function () {
-
-    let valor = tdDato.textContent.replace(",", ".");
-
-    if (isNaN(valor)) {
-        tdDato.style.background = "#ffcccc"; // rojo si es inválido
-    } else {
-        tdDato.style.background = ""; // normal si es número
-    }
-
-});
-
-
-        tr.appendChild(tdComentario);
-        tr.appendChild(tdDato);
-
-        tbody.appendChild(tr);
-    });
-}
-
-
-function guardarTabla3() {
-
-    // ✅ PEDIR CONTRASEÑA
-    
-if (!accesoPermitido) {
-    pedirClave();
-    return;
-}
-
-// reset para próxima vez
-accesoPermitido = false;
-
-
-    const filas = document.querySelectorAll("#tabla3 tbody tr");
-
-    let data = [];
-
-    filas.forEach(fila => {
-
-        const comentario = fila.cells[0].textContent;
-        const dato = parseFloat(fila.cells[1].textContent) || 0;
-
-        data.push({
-            comentario: comentario,
-            dato: dato
-        });
-    });
-
-    fetch(URL_BIN_PUT, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Master-Key": API_KEY
-        },
-        body: JSON.stringify({
-            record: data
-        })
-    })
-    .then(() => alert("✅ Guardado correctamente"))
-    .catch(err => console.error("Error:", err));
-}
-
-
 
 function renderLicenciasDesdeJSON(json) {
 
@@ -4144,9 +4002,6 @@ function generarGraficoTMESupervisor(filas) {
  
 
 
-document.getElementById("btnGuardarTabla3")
-    .addEventListener("click", guardarTabla3);
-
  
 document.getElementById("btnExportarTME").addEventListener("click", function () {
 
@@ -4237,6 +4092,9 @@ function obtenerTNPSyEncuestasPorHora() {
 
     datosGlobales.forEach(r => {
 
+        // ✅ FILTRO CLAVE → solo con supervisor
+        if (!r.supervisor || r.supervisor.trim() === "") return;
+
         if (!r.hora) return;
 
         let h = parseInt(r.hora);
@@ -4246,6 +4104,7 @@ function obtenerTNPSyEncuestasPorHora() {
 
         if (!resultado[key]) return;
 
+        // ✅ contar solo válidos
         if (r.tipo === "Promotor") resultado[key].promotores++;
         else if (r.tipo === "Detractor") resultado[key].detractores++;
 
@@ -4360,6 +4219,40 @@ function generarGraficoTNPSHora() {
     });
 }
 
+function calcularPromedioEncuestasHora() {
+
+    let horas = {};
+
+    datosGlobales.forEach(r => {
+
+        // ✅ SOLO contar encuestas con supervisor
+        if (!r.supervisor || r.supervisor.trim() === "") return;
+
+        if (!r.hora) return;
+
+        let h = parseInt(r.hora);
+
+        // ❌ excluir 00:00 - 07:59
+        if (isNaN(h) || h < 8) return;
+
+        let key = h.toString().padStart(2, "0");
+
+        if (!horas[key]) {
+            horas[key] = 0;
+        }
+
+        horas[key]++;
+    });
+
+    let totalHoras = Object.keys(horas).length;
+
+    if (totalHoras === 0) return 0;
+
+    let totalEncuestas = Object.values(horas)
+        .reduce((a, b) => a + b, 0);
+
+    return totalEncuestas / totalHoras;
+}
     </script>
 
     </body>
