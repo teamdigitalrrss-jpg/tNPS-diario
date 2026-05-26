@@ -1475,7 +1475,7 @@ document.getElementById("btnVolverTME").onclick = () => {
         tbody.innerHTML = "";
 
         // encabezados
-        const encabezados = ["Usuario OM", "Promotores", "Pasivos", "Detractores", "tNPS"];
+        const encabezados = ["Usuario OM", "Promotores", "Pasivos", "Detractores", "Total Encuestas", "tNPS"];
 
         let trHead = document.createElement("tr");
         encabezados.forEach(h => {
@@ -1486,10 +1486,15 @@ document.getElementById("btnVolverTME").onclick = () => {
         thead.appendChild(trHead);
 
         // filas
-        
-Object.entries(resultado)
-.sort((a, b) => b[1].promotores - a[1].promotores)
-.forEach(([operador, data]) => {
+
+// ✅ TOTALES
+let totalPromotores = 0;
+let totalPasivos = 0;
+let totalDetractores = 0;
+let totalEncuestasGlobal = 0;
+
+// ✅ FILAS POR ASESOR
+Object.entries(resultado).forEach(([operador, data]) => {
 
     let tNPS = 0;
 
@@ -1499,6 +1504,12 @@ Object.entries(resultado)
 
     let colorTNPS = obtenerColorTNPS(tNPS);
 
+    // ✅ SUMAR PARA TOTAL
+    totalPromotores += data.promotores;
+    totalPasivos += data.pasivos;
+    totalDetractores += data.detractores;
+    totalEncuestasGlobal += data.total;
+
     let tr = document.createElement("tr");
 
     tr.innerHTML = `
@@ -1506,6 +1517,7 @@ Object.entries(resultado)
         <td>${data.promotores}</td>
         <td>${data.pasivos}</td>
         <td>${data.detractores}</td>
+        <td>${data.total}</td>
         <td style="color:${colorTNPS}; font-weight:bold;">
             ${tNPS.toFixed(2)} %
         </td>
@@ -1513,7 +1525,41 @@ Object.entries(resultado)
 
     tbody.appendChild(tr);
 });
-    }
+
+
+// ✅ 👇 AQUÍ VA EL TOTAL
+let tnpsGlobal = 0;
+
+if (totalEncuestasGlobal > 0) {
+    tnpsGlobal = ((totalPromotores - totalDetractores) / totalEncuestasGlobal) * 100;
+}
+
+let colorGlobal = obtenerColorTNPS(tnpsGlobal);
+
+
+let trTotal = document.createElement("tr");
+
+trTotal.innerHTML = `
+    <td style="font-weight:bold; background:#ddd;">TOTAL</td>
+    <td style="font-weight:bold;">${totalPromotores}</td>
+    <td style="font-weight:bold;">${totalPasivos}</td>
+    <td style="font-weight:bold;">${totalDetractores}</td>
+    <td style="font-weight:bold;">${totalEncuestasGlobal}</td>
+    <td style="font-weight:bold; color:${colorGlobal}">
+        ${tnpsGlobal.toFixed(2)} %
+    </td>
+`;
+
+
+// ✅ FIJO ABAJO
+trTotal.style.position = "sticky";
+trTotal.style.bottom = "0";
+trTotal.style.background = "#eee";
+
+tbody.appendChild(trTotal);
+
+};
+    
     function calcularTNPSPorSupervisor(nombreSupervisor) {
 
         let datos = datosGlobales.filter(r => r.supervisor === nombreSupervisor);
@@ -2163,6 +2209,11 @@ document.getElementById("copiarTNPS").addEventListener("click", function () {
 
     // ✅ contenedor limpio
     const wrapper = document.createElement("div");
+    
+wrapper.style.maxHeight = "none";
+wrapper.style.overflow = "visible";
+wrapper.style.height = "auto";
+
     wrapper.style.position = "absolute";
     wrapper.style.left = "-9999px";
     wrapper.style.background = "#ffffff";
@@ -2170,6 +2221,19 @@ document.getElementById("copiarTNPS").addEventListener("click", function () {
     wrapper.style.width = "auto";
 
     const clone = tabla.cloneNode(true);
+
+    
+// ✅ quitar el scroll en la copia
+const contenedorClone = clone.closest(".contenedor-tabla");
+
+if (contenedorClone) {
+    contenedorClone.style.maxHeight = "none";
+    contenedorClone.style.overflow = "visible";
+}
+
+// ✅ también por seguridad
+clone.style.height = "auto";
+
 
     // ✅ 🔥 MUY IMPORTANTE (estructura Excel)
     clone.style.tableLayout = "auto";
