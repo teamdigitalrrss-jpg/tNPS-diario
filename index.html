@@ -2223,6 +2223,20 @@ wrapper.style.height = "auto";
     const clone = tabla.cloneNode(true);
 
     
+// ✅ FIX: quitar sticky SOLO en la copia
+const filas = clone.querySelectorAll("tr");
+
+filas.forEach(tr => {
+    tr.style.position = "static";
+    tr.style.bottom = "auto";
+});
+
+
+clone.style.height = "auto";
+clone.style.maxHeight = "none";
+clone.style.display = "table";
+
+    
 // ✅ quitar el scroll en la copia
 const contenedorClone = clone.closest(".contenedor-tabla");
 
